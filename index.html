@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scooby Cluster Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE  a product demo you hold up to friends: quiet page, the screen does the talking
+   IDEA   the removable track-day pod itself: the 1920 x 720 cluster in a black bezel
+   PICTURE the live cluster, running the app's simulated lap, warnings on cue
+   COLOUR night ground #070707, the cluster's own whites, amber #F5A623, red #E24B4A, blue #3D8BFF
+   TYPE   Barlow + Barlow Semi Condensed, the cluster's faces
+   LAYOUT title line, pod full width, caption under it, controls, then a short note; phones stack the same way */
+:root{color-scheme:dark;--bg:#070707;--ink:#e8e8e8;--mute:#8a8a8a;--line:#222;--panel:#111;--acc:#3D8BFF;--amb:#F5A623;--red:#E24B4A}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font:16px/1.55 Barlow,"Segoe UI",Roboto,Arial,sans-serif;overflow-x:clip}
+.wrap{max-width:1240px;margin:0 auto;padding:clamp(14px,3vw,36px) max(16px,4vw)}
+h1{font:700 clamp(30px,4.4vw,46px)/1.05 "Barlow Semi Condensed",Barlow,sans-serif;letter-spacing:-.01em;margin:0}
+.sub{color:var(--mute);margin:6px 0 0;max-width:60ch}
+.pod{margin:clamp(14px,2.4vw,26px) auto 0;width:min(100%,calc((100svh - 150px) * 2.667));min-width:min(100%,320px)}
+.bezel{padding:clamp(6px,1.1vw,14px);border-radius:clamp(12px,1.8vw,26px);background:linear-gradient(180deg,#1c1c1c,#0d0d0d 60%,#080808);box-shadow:inset 0 1px 0 #333,0 18px 40px -20px #000}
+.screen{position:relative;aspect-ratio:8/3;overflow:hidden;border-radius:clamp(4px,.6vw,10px);background:#0A0A0A}
+.stage{position:absolute;left:0;top:0;width:1920px;height:720px;transform-origin:0 0;font-family:Barlow,sans-serif;color:#fff}
+.cap{display:flex;gap:12px;align-items:baseline;min-height:3.2em;margin:12px 2px 0;color:var(--ink)}
+.cap b{flex:none;color:var(--acc);font-weight:600;font-variant-numeric:tabular-nums}
+.hint{display:none;color:var(--mute);font-size:14px;margin:8px 2px 0}
+@media (orientation:portrait) and (max-width:700px){.hint{display:block}}
+@media (orientation:landscape) and (max-height:520px){.sub{display:none}h1{font-size:24px}.wrap{padding-top:10px}.pod{margin-top:8px;width:min(100%,calc((100svh - 96px) * 2.667))}}
+.pod:fullscreen{width:100%;height:100%;margin:0;padding:2vh 2vw;background:#070707;display:flex;flex-direction:column;justify-content:center}
+.pod:fullscreen .bezel,.pod:fullscreen .cap{width:min(100%,calc((100vh - 120px) * 2.667));margin-left:auto;margin-right:auto}
+.pod:fullscreen .hint{display:none}
+.ctl{display:grid;gap:12px;margin-top:14px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row span{color:var(--mute);font-size:14px;margin-right:4px;flex:none}
+button{font:600 16px Barlow,sans-serif;color:var(--ink);background:var(--panel);border:1px solid #2c2c2c;border-radius:10px;min-height:44px;padding:0 16px;cursor:pointer}
+button:hover{border-color:#555}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button[aria-pressed=true]{background:#1d2b44;border-color:var(--acc);color:#fff}
+button.fault[aria-pressed=true]{background:#3a1414;border-color:var(--red)}
+button.go{background:var(--acc);border-color:var(--acc);color:#04101f}
+.about{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:18px 28px;margin-top:clamp(26px,4vw,44px);padding-top:22px;border-top:1px solid var(--line)}
+.about h2{font:600 18px/1.3 Barlow,sans-serif;margin:0 0 4px}
+.about p{margin:0;color:#bdbdbd;font-size:16px}
+.note{color:var(--mute);font-size:14px;margin-top:18px}
+/* cluster internals, in panel pixels */
+.ab{position:absolute}
+.lab{color:#8A8A8A;font-weight:600;letter-spacing:.14em}
+.num{font-family:"Barlow Semi Condensed",Barlow,sans-serif;font-weight:700;line-height:1;white-space:nowrap}
+.tile{position:absolute;background:#111;border-radius:12px;display:flex;flex-direction:column;justify-content:center;gap:6px;padding:0 28px;overflow:hidden}
+.tile .t{color:#8A8A8A;font-weight:600;letter-spacing:.1em;white-space:nowrap}
+.tile .v{white-space:nowrap}
+.tile .u{color:#8A8A8A;font-weight:500;margin-left:.3em;font-family:Barlow,sans-serif}
+.tile.alert{background:#C62828}
+.tile.alert .t,.tile.alert .u{color:#fff}
+.tile.alert .t{font-weight:700}
+.dim{color:#8A8A8A !important}
+.foot{position:absolute;display:flex;justify-content:space-between;align-items:center;gap:24px;border-top:1px solid #1A1A1A;color:#8A8A8A;font-size:22px;white-space:nowrap}
+.foot b{color:#fff;font-weight:600}
+.pill{border:1px solid #2A2A2A;border-radius:999px;padding:4px 18px;font-size:18px;font-weight:600;letter-spacing:.16em;color:#fff}
+.card{position:absolute;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center}
+.seg{border-radius:6px;background:#1A1A1A}
+.cell{position:absolute;border-radius:10px;background:#111;color:#8A8A8A}
+.cell.on{color:#fff}
+.cell.trip{background:#C62828;color:#fff}
+.wm{position:absolute;left:0;top:0;width:1920px;height:720px;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.wm div{transform:rotate(-12deg);font:700 170px "Barlow Semi Condensed",sans-serif;letter-spacing:12px;color:#fff;opacity:.06;white-space:nowrap}
+@keyframes dash{to{stroke-dashoffset:-46}}
+.nvdash{animation:dash .5s linear infinite}
+.mini{display:flex;flex-direction:column;gap:4px;padding:16px 18px;border-radius:12px;background:#111}
+.mini .t{font-size:15px;font-weight:600;letter-spacing:.1em;color:#8A8A8A}
+.mini .num{font-size:52px;font-weight:600}
+.mini .u{font-size:20px;font-weight:500;color:#8A8A8A;font-family:Barlow,sans-serif}
+.panel{position:absolute;box-sizing:border-box;border:1px solid #1A1A1A;border-radius:16px;background:rgba(10,10,10,.86);display:flex;flex-direction:column}
+#v-sport .mv{transition:transform .9s cubic-bezier(.2,.7,.2,1),opacity .6s ease}
+#sp-tach{transform-origin:50% 50%}
+#v-sport.mapon #sp-tach{transform:translateX(330px) scale(.88)}
+#v-sport.mapon #sp-flanks,#v-sport.mapon .sp-rings{opacity:0;transform:scale(.92)}
+#sp-map,#sp-strip{opacity:0;transform:translateX(-60px)}
+#v-sport.mapon #sp-map,#v-sport.mapon #sp-strip{opacity:1;transform:none}
+.rt{position:absolute;border:2px solid #D8D8D8;border-radius:12px;background:#0A0A0A;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;text-align:center}
+.rt .h{font-size:22px;font-weight:700;letter-spacing:.06em}
+.rt .num{font-size:64px}
+@media (prefers-reduced-motion:reduce){.bezel{box-shadow:none}.nvdash{animation:none}#v-sport .mv{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Scooby cluster</h1>
+  <p class="sub">The track-day display pod for a 1993 Impreza wagon with an EJ207. Track, Road and PDM are the app's screens, running a simulated lap. The rest are concepts that aren't built yet: night map, new-track map, night vision, a race grid, and a round tach that can bring in a map.</p>
+
+  <div class="pod">
+    <div class="bezel"><div class="screen" id="screen"><div class="stage" id="stage"></div></div></div>
+    <div class="cap" id="cap"><b id="capn">Live</b><span id="capt">A simulated lap is running. Play the tour, or try the buttons.</span></div>
+    <p class="hint">Turn your phone sideways for a bigger screen.</p>
+  </div>
+
+  <div class="ctl">
+    <div class="row">
+      <button class="go" id="tour">Play tour</button>
+      <button id="pause">Pause lap</button>
+      <button id="reset">Reset</button>
+      <button id="fs">Full screen</button>
+    </div>
+    <div class="row" role="group" aria-label="Screen">
+      <span>Screen</span>
+      <button data-view="track" aria-pressed="true">Track</button>
+      <button data-view="road" aria-pressed="false">Road</button>
+      <button data-view="pdm" aria-pressed="false">PDM outputs</button>
+    </div>
+    <div class="row" role="group" aria-label="Concepts">
+      <span>Concepts</span>
+      <button data-view="nmap" aria-pressed="false">Night map</button>
+      <button data-view="tmap" aria-pressed="false">New-track map</button>
+      <button data-view="nv" aria-pressed="false">Night vision</button>
+      <button data-view="race" aria-pressed="false">Race grid</button>
+      <button data-view="sport" aria-pressed="false">Round tach</button>
+      <button id="morph" aria-pressed="false">Bring in map</button>
+    </div>
+    <div class="row" role="group" aria-label="Faults">
+      <span>Faults</span>
+      <button class="fault" data-f="oil" aria-pressed="false">Oil pressure low</button>
+      <button class="fault" data-f="pdm" aria-pressed="false">Fuel pump 2 trips</button>
+      <button class="fault" data-f="nocan" aria-pressed="false">No CAN</button>
+      <button class="fault" data-f="stale" aria-pressed="false">Data stops</button>
+      <button class="fault" data-f="waiting" aria-pressed="false">Waiting for ECU</button>
+      <button id="ack">Acknowledge</button>
+    </div>
+  </div>
+
+  <div class="about">
+    <div><h2>A pod, not a replacement</h2><p>It clips onto the dash for track days and comes off afterwards. The factory cluster stays in the car.</p></div>
+    <div><h2>What runs it</h2><p>A Raspberry Pi 5 drives a 1920 × 720 panel with a Qt app. It listens to the Emtron KV8 engine computer and the Hardwire PDM-28 power module over CAN.</p></div>
+    <div><h2>Warnings that stay put</h2><p>A low oil pressure or a tripped output latches a red card until the driver acknowledges it. If the data stops, every reading turns to dashes instead of freezing.</p></div>
+    <div><h2>Where it stands</h2><p>The app runs on a desktop with this simulated lap. It hasn't been in the car yet.</p></div>
+    <div><h2>Ideas next</h2><p>A dark map for night and canyon roads, a track map drawn from the first lap, and a thermal night-vision view are recorded as an idea, with nothing decided. The race grid and the round tach with its map are design directions to grow into.</p></div>
+  </div>
+  <p class="note">This page re-creates the app's screens in the browser. All values are simulated. Shift point 7,300 rpm, redline 7,500 rpm and the oil warning (below 25 psi above 2,500 rpm) are placeholders still to be set. Keys: 1, 2 and 3 switch screens, 4 to 8 show the concepts, 9 brings the map in or out, T plays the tour, Enter acknowledges, Space pauses, F goes full screen.</p>
+</div>
+
+<script>
+{
+const $ = id => document.getElementById(id);
+const NO = '- - -';
+const KPA_PSI = 6.894757, BARO = 101.3, DT = 0.05;
+const SHIFT = 7300, REDLINE = 7500, RPM_MAX = 9000, BOOST_T = 28, BOOST_MAX = 35, MPH_MAX = 160;
+
+// ── Simulated lap: same script and numbers as the app's DriveCycle ──
+const RAT = [3.636, 2.375, 1.761, 1.346, 0.971, 0.756], ACC = [7.5, 6, 4.5, 3.4, 2.6, 2.0];
+const rpmFor = (v, g) => Math.max(850, v / 3.6 / 1.97 * 60 * RAT[g - 1] * 3.9);
+function buildLap() {
+  const plan = [['A',190],['B',80],['H',3],['A',150],['B',65],['H',4],['A',210],['B',100],['H',2],['A',165],['B',60],['H',3]];
+  const st = { v: 60, g: 2, sh: 0, map: BARO - 40 };
+  for (let g = 1; g <= 6; g++) if (rpmFor(st.v, g) < SHIFT) { st.g = g; break; }
+  const mapT = (th, rpm) => th <= 0 ? 30 : th < 60 ? 60 + th * 0.8
+    : BARO + 27.5 * KPA_PSI * (th / 100) * Math.min(1, Math.max(0, (rpm - 2800) / 1800));
+  let out = [];
+  for (let pass = 0; pass < 2; pass++) {
+    out = []; let t = 0;
+    const rec = th => { const rpm = rpmFor(st.v, st.g); st.map += (mapT(th, rpm) - st.map) * Math.min(1, DT / 0.25);
+      out.push({ t, v: st.v, rpm, g: st.g, th, map: st.map }); t += DT; };
+    for (const [k, x] of plan) {
+      if (k === 'A') {
+        while (st.v < x) {
+          if (st.sh > 0) { st.sh -= DT; rec(0); continue; }
+          st.v = Math.min(x, st.v + ACC[st.g - 1] * DT * 3.6); rec(100);
+          if (rpmFor(st.v, st.g) >= SHIFT && st.g < 6) { st.g++; st.sh = 0.15; }
+        }
+      } else if (k === 'B') {
+        st.sh = 0;
+        while (st.v > x) {
+          st.v = Math.max(x, st.v - 9 * DT * 3.6);
+          if (st.g > 1 && rpmFor(st.v, st.g) < 3800 && rpmFor(st.v, st.g - 1) <= 7000) st.g--;
+          rec(0);
+        }
+      } else { for (let i = 0, n = Math.round(x / DT); i < n; i++) rec(35); }
+    }
+  }
+  return out;
+}
+const LAP = buildLap(), LAP_S = LAP.length * DT;
+const at = t => LAP[Math.min(LAP.length - 1, Math.floor((((t % LAP_S) + LAP_S) % LAP_S) / DT))];
+const moment = name => {
+  const f = { shift: s => s.th >= 100 && s.rpm >= 7300, high: s => s.th >= 100 && s.g === 3 && s.rpm >= 6700 && s.rpm <= 6950 }[name];
+  const s = LAP.find(f); return s ? s.t : 0;
+};
+
+// ── State ──
+let simT = 0, frozenT = -1, paused = false, view = 'track';
+const F = { oil: false, pdm: false, stale: false, waiting: false, nocan: false };
+const d = { rpm: 0, map: BARO, gear: 1, kph: 0, oil: 0, oilT: 0, ect: 0, lam: 1, bat: 14.1, eth: 82, iat: 36, g: 0, thr: 0, brk: 0 };
+const link = { seen: false, last: 0 };
+const pdm = { st: Array(28).fill(0), a: Array(28).fill(0), v: 0, tot: 0, faults: 0 };
+const W = { oil: { active: false, latched: false, ack: false, held: false, since: 0 }, pdm: Array.from({ length: 28 }, () => ({ active: false, latched: false, ack: false })) };
+const now = () => performance.now();
+
+function simTick() {
+  if (!paused && frozenT < 0) simT += DT;
+  if (F.stale || F.waiting || F.nocan) return;
+  const t = frozenT >= 0 ? frozenT : simT, s = at(t), rip = Math.sin(t * 7);
+  const boost = Math.max(0, (s.map - BARO) / KPA_PSI);
+  d.rpm = s.rpm; d.map = s.map; d.gear = s.g; d.kph = s.v;
+  d.oil = F.oil ? 18 + rip * 0.3 : 15 + s.rpm * 0.0085 + rip * 0.6;
+  d.oilT = 112 + 2 * Math.sin(t * 0.05); d.ect = 96 + Math.sin(t * 0.07);
+  d.lam = (s.th <= 0 ? 1.5 : s.map > BARO + 20 ? 0.79 : 1.0) + rip * 0.004;
+  d.iat = 36 + boost * 0.12;
+  const acc = (s.v - at(t - DT).v) / 3.6 / DT;   // m/s², from the lap itself
+  d.g = d.g * 0.7 + (acc / 9.81) * 0.3; d.thr = s.th / 100; d.brk = s.th <= 0 && acc < -2 ? Math.min(1, -acc / 9) : 0;
+  if (!paused && frozenT < 0) routeD += s.v / 3.6 * DT * 0.6;
+  link.seen = true; link.last = now();
+}
+function linkState() {
+  if (F.nocan) return 'nocan';
+  if (!link.seen) return 'waiting';
+  return now() - link.last > 500 ? 'stale' : 'live';
+}
+function supervise() {
+  const t = frozenT >= 0 ? frozenT : simT, live = linkState() === 'live';
+  pdm.st.fill(0); pdm.a.fill(0);
+  pdm.st[24] = 1; pdm.a[24] = Math.round((11.4 + 0.2 * Math.sin(t * 3.1)) * 10) / 10;
+  if (F.pdm) { pdm.st[25] = 2; } else { pdm.st[25] = 1; pdm.a[25] = Math.round((11.1 + 0.2 * Math.sin(t * 2.7 + 1)) * 10) / 10; }
+  pdm.tot = pdm.a.reduce((x, y) => x + y, 0); pdm.v = Math.round((14.1 - pdm.tot * 0.008) * 10) / 10;
+  pdm.faults = pdm.st.filter(x => x >= 2).length;
+  // Warning rules, as in the app's WarningEvaluator (placeholders: 25 psi low, 30 psi clear, 2,500 rpm gate, 300 ms)
+  const o = W.oil, n = now();
+  if (!live) { o.active = false; o.held = false; if (o.ack) { o.latched = false; o.ack = false; } }
+  else if (!o.active) {
+    if (d.rpm >= 2500 && d.oil < 25) { if (!o.held) { o.held = true; o.since = n; } if (n - o.since >= 300) { o.active = true; o.latched = true; o.ack = false; } }
+    else o.held = false;
+  } else if (!(d.rpm >= 2500 && d.oil <= 30)) { o.active = false; o.held = false; if (o.ack) { o.latched = false; o.ack = false; } }
+  W.pdm.forEach((w, i) => {
+    const trip = live && pdm.st[i] >= 2;
+    if (!live) { w.active = false; if (w.ack) { w.latched = false; w.ack = false; } }
+    else if (!w.active && trip) { w.active = true; w.latched = true; w.ack = false; }
+    else if (w.active && !trip) { w.active = false; if (w.ack) { w.latched = false; w.ack = false; } }
+  });
+}
+function pending() {
+  const p = [];
+  if (W.oil.latched && !W.oil.ack) p.push({ kind: 'oil', title: 'OIL PRESSURE' });
+  W.pdm.forEach((w, i) => { if (w.latched && !w.ack) p.push({ kind: 'pdm', ch: i + 1, title: chName(i + 1) || 'PDM OUTPUT' }); });
+  return p;
+}
+function acknowledge() {
+  for (const w of [W.oil, ...W.pdm]) { if (!w.latched) continue; if (w.active) w.ack = true; else { w.latched = false; w.ack = false; } }
+}
+function setFault(k, on) { F[k] = on; if (k === 'waiting' && on) link.seen = false; syncButtons(); }
+function resetAll() {
+  for (const k in F) F[k] = false;
+  link.seen = false; simT = 0; frozenT = -1; paused = false;
+  W.oil = { active: false, latched: false, ack: false, held: false, since: 0 };
+  W.pdm.forEach(w => { w.active = w.latched = w.ack = false; });
+  setMorph(false);
+  syncButtons();
+}
+const chName = ch => ch === 25 ? 'FUEL PUMP 1' : ch === 26 ? 'FUEL PUMP 2' : '';
+
+// ── Formatting ──
+const grouped = n => Math.round(n).toLocaleString('en-US');
+const gearText = g => g === 0 ? 'N' : String(g);
+const mph = () => d.kph * 0.621371;
+const boostPsi = () => (d.map - BARO) / KPA_PSI;
+const linkTitle = s => ({ waiting: 'WAITING FOR ECU', nocan: 'NO CAN', stale: 'DATA STALE' })[s] || '';
+const linkLine = s => ({ waiting: 'can0 UP · NO FRAMES YET', nocan: 'can0 NOT FOUND', stale: 'can0 UP · FRAMES STOPPED' })[s] || '';
+const linkDetail = s => s === 'waiting' ? 'No frames received since start' : s === 'nocan' ? 'Interface can0 not found'
+  : 'Last frame ' + Math.max(0, (now() - link.last) / 1000).toFixed(1) + ' s ago · values hidden';
+const lightCol = (i, lit, shift) => i >= lit ? '#1A1A1A' : shift ? '#3D8BFF' : i < 8 ? '#E8E8E8' : i < 12 ? '#F5A623' : '#E24B4A';
+const pair = (l, v) => `${l} <b>${v}</b>`;
+const clock = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const pdmLine = () => pdm.faults ? `PDM <b style="color:#E24B4A">${pdm.faults} FAULT</b> <b>· ${pdm.v.toFixed(1)} V · ${Math.round(pdm.tot)} A</b>` : pair('PDM', `OK · ${pdm.v.toFixed(1)} V · ${Math.round(pdm.tot)} A`);
+const build = '<span style="color:#F5A623;font-weight:700">SIM</span> · build 1.0';
+
+// ── Screens (1920 x 720 panel pixels, from the Design canvas boards) ──
+const tile = (id, x, y, w, h, label, unit, s = { l: 20, v: 84, u: 26, p: 28 }) =>
+  `<div class="tile" id="${id}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;padding:0 ${s.p}px">
+   <div class="t" style="font-size:${s.l}px" id="${id}-t">${label}</div>
+   <div class="v"><span class="num" style="font-size:${s.v}px" id="${id}-v">${NO}</span>${unit ? `<span class="u" style="font-size:${s.u}px" id="${id}-u">${unit}</span>` : ''}</div></div>`;
+
+function trackHTML() {
+  const tw = (1856 - 80) / 5;
+  const lights = Array.from({ length: 15 }, (_, i) => `<div class="seg" id="sl${i}" style="flex:1;height:48px"></div>`).join('');
+  return `<div id="v-track" class="ab" style="inset:0">
+  <div class="ab" style="left:32px;top:20px;width:1856px;display:flex;gap:10px">${lights}</div>
+  <div class="ab" style="left:32px;top:116px;width:698px">
+    <div class="lab" style="font-size:22px">RPM</div>
+    <div class="num" id="t-rpm" style="font-size:190px;height:171px;display:flex;align-items:center;margin-top:10px">${NO}</div>
+    <div style="position:relative;height:24px;margin-top:10px;background:#1A1A1A;border-radius:4px;overflow:hidden">
+      <div id="t-red" style="position:absolute;left:${REDLINE / RPM_MAX * 100}%;right:0;top:0;bottom:0;background:#4A1A1A"></div>
+      <div id="t-rfill" style="position:absolute;left:0;top:0;bottom:0;width:0"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:18px;color:#8A8A8A"><span>0</span><span>3</span><span>6</span><span>9 ×1000</span></div>
+  </div>
+  <div class="ab" id="t-normal" style="left:770px;top:88px;width:380px;height:340px;border-left:1px solid #1A1A1A;border-right:1px solid #1A1A1A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+    <div class="lab" style="font-size:20px">GEAR</div>
+    <div class="num" id="t-gear" style="font-size:170px;height:153px;display:flex;align-items:center">-</div>
+    <div style="font-size:30px;font-weight:600"><span id="t-mph">0</span> <span style="font-size:20px;color:#8A8A8A;font-weight:500">mph</span></div>
+  </div>
+  <div class="card" id="t-warn" style="left:770px;top:88px;width:380px;height:340px;background:#C62828;display:none">
+    <div id="t-wt" style="font-size:26px;font-weight:700;letter-spacing:.12em"></div>
+    <div id="t-wb" class="num"></div>
+    <div style="font-size:20px;font-weight:600;letter-spacing:.08em">LATCHED · ACK TO CLEAR</div>
+    <div id="t-wg" style="font-size:22px;font-weight:600"></div>
+  </div>
+  <div class="card" id="t-link" style="left:770px;top:88px;width:380px;height:340px;background:#111;border:3px solid #F5A623;gap:14px;padding:0 24px;display:none">
+    <div id="t-lt" class="num" style="font-size:56px;white-space:normal"></div>
+    <div id="t-ld" style="font-size:22px;font-weight:500;color:#8A8A8A"></div>
+    <div style="font-size:20px;font-weight:600;color:#8A8A8A">GEAR ${NO} · ${NO} mph</div>
+  </div>
+  <div class="ab" style="left:1190px;top:116px;width:698px;text-align:right">
+    <div class="lab" style="font-size:22px">BOOST · PSI</div>
+    <div class="num" id="t-boost" style="font-size:190px;height:171px;display:flex;align-items:center;justify-content:flex-end;margin-top:10px">${NO}</div>
+    <div style="position:relative;height:24px;margin-top:10px;background:#1A1A1A;border-radius:4px">
+      <div id="t-bfill" style="position:absolute;left:0;top:0;bottom:0;width:0;background:#3D8BFF;border-radius:4px"></div>
+      <div id="t-bmark" style="position:absolute;left:${BOOST_T / BOOST_MAX * 100}%;top:-6px;bottom:-6px;width:4px;background:#fff"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:18px;color:#8A8A8A"><span>0</span><span>TARGET ${BOOST_T}</span><span>${BOOST_MAX}</span></div>
+  </div>
+  ${tile('t-oil', 32, 448, tw, 176, 'OIL PRESS', 'psi')}
+  ${tile('t-lam', 32 + (tw + 20), 448, tw, 176, 'LAMBDA', '')}
+  ${tile('t-ot', 32 + 2 * (tw + 20), 448, tw, 176, 'OIL TEMP', '°C')}
+  ${tile('t-ect', 32 + 3 * (tw + 20), 448, tw, 176, 'COOLANT', '°C')}
+  <div class="tile" style="left:${32 + 4 * (tw + 20)}px;top:448px;width:${tw}px;height:176px;padding:0 24px">
+    <div class="t" style="font-size:20px">HEAD GASKET WATCH</div>
+    ${['KNOCK RATE', 'ECT RISE', 'OIL − ECT'].map(l => `<div style="display:flex;justify-content:space-between;align-items:baseline;color:#8A8A8A"><span style="font-size:18px">${l}</span><span style="font-size:26px;font-weight:600">${NO}</span></div>`).join('')}
+  </div>
+  <div class="foot" id="t-foot" style="left:32px;top:644px;width:1856px;height:56px;padding:0 8px"></div>
+</div>`;
+}
+
+const arc = (r, a0, a1) => {
+  const p = a => [280 + r * Math.cos(a * Math.PI / 180), 280 + r * Math.sin(a * Math.PI / 180)];
+  const [x0, y0] = p(a0), [x1, y1] = p(a1);
+  return `M${x0.toFixed(1)} ${y0.toFixed(1)}A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+};
+const ang = f => 135 + 270 * Math.max(0, Math.min(1, f));
+function dialHTML(id, x, max, major, minor, labStep, div, red, labSize, caption, centre) {
+  let ticks = '', labs = '';
+  for (let v = 0; v <= max + 1e-6; v += minor) {
+    const a = ang(v / max) * Math.PI / 180, mj = Math.abs(v / major - Math.round(v / major)) < 1e-6, r0 = mj ? 226 : 240;
+    ticks += `<line x1="${(280 + r0 * Math.cos(a)).toFixed(1)}" y1="${(280 + r0 * Math.sin(a)).toFixed(1)}" x2="${(280 + 252 * Math.cos(a)).toFixed(1)}" y2="${(280 + 252 * Math.sin(a)).toFixed(1)}" stroke="${red >= 0 && v >= red ? '#E24B4A' : '#8A8A8A'}" stroke-width="3"/>`;
+  }
+  for (let v = 0; v <= max + 1e-6; v += labStep) {
+    const a = ang(v / max) * Math.PI / 180;
+    labs += `<text x="${(280 + 196 * Math.cos(a)).toFixed(1)}" y="${(280 + 196 * Math.sin(a)).toFixed(1)}" fill="${red >= 0 && v >= red ? '#E24B4A' : '#E8E8E8'}" font-size="${labSize}" font-weight="600" text-anchor="middle" dominant-baseline="central" font-family="Barlow Semi Condensed, Barlow, sans-serif">${Math.round(v / div)}</text>`;
+  }
+  return `<div class="ab" style="left:${x}px;top:96px;width:540px;height:540px">
+  <svg viewBox="0 0 560 560" width="540" height="540" style="position:absolute;inset:0">
+    <path d="${arc(262, 135, 405)}" stroke="#1A1A1A" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path id="${id}-acc" d="" stroke="#3D8BFF" stroke-width="6" fill="none" stroke-linecap="round"/>
+    ${red >= 0 ? `<path d="${arc(262, ang(red / max), 405)}" stroke="#E24B4A" stroke-width="6" fill="none"/>` : ''}
+    ${ticks}<circle cx="280" cy="280" r="150" fill="#111" stroke="#1A1A1A" stroke-width="2"/>${labs}
+    <line id="${id}-nd" x1="0" y1="0" x2="0" y2="0" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+  </svg>
+  <div style="position:absolute;left:140px;top:140px;width:260px;height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center">${centre}</div>
+  <div class="lab" style="position:absolute;left:0;right:0;top:486px;text-align:center;font-size:16px">${caption}</div></div>`;
+}
+const level = (id, x, top, topCol, bot, botCol, cap) => `<div class="ab" style="left:${x}px;top:190px;width:40px;height:340px;display:flex;flex-direction:column;align-items:center;gap:8px">
+  <div style="height:24px;font-size:20px;font-weight:700;color:${topCol}">${top}</div>
+  <div style="flex:1;width:16px;display:flex;flex-direction:column;gap:5px">${Array.from({ length: 10 }, (_, i) => `<div id="${id}${i}" style="flex:1;border-radius:3px;background:#1A1A1A"></div>`).join('')}</div>
+  <div style="height:24px;font-size:20px;font-weight:700;color:${botCol}">${bot}</div>
+  <div style="font-size:15px;font-weight:600;letter-spacing:1.2px;color:#8A8A8A">${cap}</div></div>`;
+
+function roadHTML() {
+  const cw = (520 - 16) / 2, rh = (608 - 36 - 22 - 40 - 22 - 32) / 3, s = { l: 16, v: 56, u: 22, p: 24 }, y0 = 58;
+  return `<div id="v-road" class="ab" style="inset:0;display:none">
+  ${level('r-e', 34, 'H', '#E24B4A', 'C', '#8A8A8A', 'ECT')}
+  ${dialHTML('r-r', 110, 9000, 1000, 500, 1000, 1000, REDLINE, 34, 'RPM × 1000',
+    `<div class="lab" style="font-size:16px">GEAR</div><div class="num" id="r-gear" style="font-size:128px">-</div><div style="font-size:22px;color:#8A8A8A"><span id="r-rpm">${NO}</span> rpm</div>`)}
+  <div class="ab" style="left:700px;top:56px;width:520px;height:608px">
+    <div style="display:flex;justify-content:center"><div class="pill" id="r-pill" style="color:#8A8A8A">ROAD</div></div>
+    ${tile('r-oil', 0, y0, cw, rh, 'OIL PRESS', 'psi', s)}${tile('r-ot', cw + 16, y0, cw, rh, 'OIL TEMP', '°C', s)}
+    ${tile('r-ect', 0, y0 + rh + 16, cw, rh, 'COOLANT', '°C', s)}${tile('r-lam', cw + 16, y0 + rh + 16, cw, rh, 'LAMBDA', '', s)}
+    ${tile('r-bat', 0, y0 + 2 * (rh + 16), cw, rh, 'BATTERY', 'V', s)}${tile('r-eth', cw + 16, y0 + 2 * (rh + 16), cw, rh, 'ETHANOL', '%', s)}
+    <div class="foot" style="left:0;bottom:0;width:520px;height:40px;padding:12px 6px 0;font-size:20px"><span id="r-iat"></span><span style="font-size:16px">${build}</span></div>
+  </div>
+  ${dialHTML('r-s', 1270, 160, 20, 10, 20, 1, -1, 32, 'SPEED',
+    `<div class="num" id="r-mph" style="font-size:140px">${NO}</div><div class="lab" style="font-size:20px">MPH</div>`)}
+  ${level('r-f', 1846, 'F', '#8A8A8A', 'E', '#E24B4A', 'FUEL')}
+</div>`;
+}
+
+function pdmHTML() {
+  const cw = (1856 - 72) / 7, ch = (544 - 36) / 4;
+  const cells = Array.from({ length: 28 }, (_, i) => {
+    const c = i + 1, x = 32 + (i % 7) * (cw + 12), y = 100 + Math.floor(i / 7) * (ch + 12);
+    return `<div class="cell" id="c${c}" style="left:${x}px;top:${y}px;width:${cw}px;height:${ch}px">
+      <div class="ab" style="left:16px;top:12px;font-size:18px;font-weight:700;letter-spacing:1.1px">CH${c}</div>
+      <div class="ab" style="right:16px;top:14px;font-size:16px;font-weight:600">${c >= 25 ? 30 : 20} A</div>
+      <div class="ab" style="left:16px;top:${ch / 2 - 13}px;font-size:20px;font-weight:600">${chName(c) || 'unassigned'}</div>
+      <div class="ab" id="c${c}s" style="left:16px;bottom:14px;font-size:20px;font-weight:700;letter-spacing:1.6px"></div>
+      <div class="ab num" id="c${c}a" style="right:16px;bottom:8px;font-size:30px"></div></div>`;
+  }).join('');
+  return `<div id="v-pdm" class="ab" style="inset:0;display:none">
+  <div class="ab" style="left:32px;top:20px;width:1856px;height:64px;border-bottom:1px solid #1A1A1A;display:flex;justify-content:space-between;align-items:center">
+    <div class="num" style="font-size:40px;letter-spacing:1.6px">PDM-28 OUTPUTS</div>
+    <div style="display:flex;gap:40px;align-items:center;font-size:24px;color:#8A8A8A"><span id="p-v"></span><span id="p-a"></span><span id="p-f" style="font-weight:700"></span><span class="pill">PDM</span></div>
+  </div>${cells}
+  <div class="ab" style="left:32px;top:660px;width:1856px;height:40px;display:flex;justify-content:space-between;align-items:center;font-size:18px;color:#8A8A8A"><span>MODE returns to Track</span><span>${build}</span></div>
+</div>`;
+}
+
+// ── Concept screens (Design canvas boards for idea IR-002; not in the app) ──
+const ROUTE = 'M 960 760 C 960 640 1010 600 1080 540 S 1240 420 1150 340 S 900 300 860 230 S 980 120 1100 60 S 1300 -20 1400 -40';
+const OUTLINE = 'M 60 150 C 85.0 157.3 150.0 156.0 200 156 C 250.0 156.0 320.0 153.0 360 150 C 400.0 147.0 417.0 145.0 440 138 C 463.0 131.0 484.7 119.3 498 108 C 511.3 96.7 519.7 81.3 520 70 C 520.3 58.7 509.7 45.3 500 40 C 490.3 34.7 473.3 33.7 462 38 C 450.7 42.3 442.7 57.0 432 66 C 421.3 75.0 412.0 87.3 398 92 C 384.0 96.7 364.3 97.7 348 94 C 331.7 90.3 318.0 78.7 300 70 C 282.0 61.3 261.7 48.0 240 42 C 218.3 36.0 191.7 33.7 170 34 C 148.3 34.3 126.7 37.3 110 44 C 93.3 50.7 80.0 62.7 70 74 C 60.0 85.3 51.7 99.3 50 112 C 48.3 124.7 35.0 142.7 60 150 Z';
+const mini = (id, label, unit) => `<div class="mini"><span class="t">${label}</span><span><span class="num" id="${id}">${NO}</span> <span class="u">${unit}</span></span></div>`;
+function nmapHTML() {
+  return `<div id="v-nmap" class="ab" style="inset:0;display:none;background:#07090C">
+  <svg viewBox="0 0 1920 720" width="1920" height="720" style="position:absolute;inset:0">
+    <path d="M 300 700 C 520 600 640 520 760 470 S 980 420 1080 300 M 380 120 C 560 160 700 120 820 40 M 1240 700 C 1300 600 1420 560 1600 540 M 1220 180 C 1360 230 1500 200 1700 120" fill="none" stroke="#0F141A" stroke-width="2"/>
+    <path d="M 1060 520 C 1200 560 1350 600 1500 720 M 1140 345 C 1300 300 1420 330 1600 260 M 860 232 C 760 220 640 250 480 200 M 1010 600 C 900 640 760 650 560 720" fill="none" stroke="#1C222A" stroke-width="6" stroke-linecap="round"/>
+    <path d="${ROUTE}" fill="none" stroke="#262D36" stroke-width="26" stroke-linecap="round"/>
+    <path d="${ROUTE}" fill="none" stroke="#343C47" stroke-width="16" stroke-linecap="round"/>
+    <path d="${ROUTE}" fill="none" stroke="#3D8BFF" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+    <text x="1196" y="478" fill="#8A8A8A" font-family="Barlow, sans-serif" font-size="20" font-weight="600" letter-spacing="2">CANYON RD</text>
+    <path d="M 1290 640 L 1410 640 M 1290 632 L 1290 648 M 1410 632 L 1410 648" fill="none" stroke="#8A8A8A" stroke-width="3"/>
+    <text x="1350" y="624" fill="#8A8A8A" font-family="Barlow, sans-serif" font-size="18" font-weight="600" text-anchor="middle">0.25 mi</text>
+    <g id="nm-car" transform="translate(982 648) rotate(20)"><polygon points="0,-24 15,15 0,6 -15,15" fill="#fff" stroke="#0A0A0A" stroke-width="3"/></g>
+  </svg>
+  <div class="panel" style="left:40px;top:40px;width:400px;height:640px;padding:28px 32px;gap:14px">
+    <div style="display:flex"><span class="pill" style="color:#8A8A8A">ROAD · NIGHT</span></div>
+    <span class="lab" style="margin-top:18px;font-size:18px">SPEED</span>
+    <span class="num" id="nm-mph" style="font-size:200px;line-height:.85">${NO}</span>
+    <span class="lab" style="font-size:22px">MPH</span>
+    <div style="flex:1"></div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:16px;border-top:1px solid #1A1A1A"><span class="lab" style="font-size:18px">GEAR</span><span class="num" id="nm-gear" style="font-size:64px">-</span></div>
+    <div style="position:relative;height:14px;border-radius:4px;background:#1A1A1A;overflow:hidden"><div style="position:absolute;top:0;bottom:0;left:${REDLINE / RPM_MAX * 100}%;right:0;background:#4A1A1A"></div><div id="nm-rfill" style="position:absolute;top:0;bottom:0;left:0;width:0;background:#E8E8E8"></div></div>
+    <span style="font-size:20px;font-weight:500;color:#8A8A8A"><span id="nm-rpm">${NO}</span> rpm</span>
+  </div>
+  <div class="panel" style="left:1480px;top:40px;width:400px;height:640px;padding:24px;gap:16px">
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">${mini('nm-oil', 'OIL PRESS', 'psi')}${mini('nm-ect', 'COOLANT', '°C')}${mini('nm-ot', 'OIL TEMP', '°C')}${mini('nm-bat', 'BATTERY', 'V')}</div>
+    <div class="mini"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="t">FUEL</span><span style="font-size:20px;font-weight:600;color:#8A8A8A">${NO}</span></div><div style="height:12px;border-radius:4px;background:#1A1A1A"></div></div>
+    <div style="flex:1"></div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid #1A1A1A;font-size:19px;color:#8A8A8A">
+      <span>HEAD GASKET WATCH ${NO}</span><span id="nm-pdm"></span></div>
+  </div>
+  <div class="ab" style="left:480px;top:656px;width:960px;height:44px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;border:1px solid #1A1A1A;border-radius:999px;background:rgba(10,10,10,.86);font-size:18px;color:#8A8A8A">
+    <span>${pair('GPS', '3D FIX')}</span><span>${pair('MAP', 'OFFLINE')}</span><span>HEADING <b style="color:#fff" id="nm-hdg">---</b></span><span>${pair('DIM', 'AUTO')}</span><span style="font-size:16px">${build}</span></div>
+</div>`;
+}
+function tmapHTML() {
+  const fr = (1856 - 60) / 5.4, lights = Array.from({ length: 15 }, (_, i) => `<div class="seg" id="tm-sl${i}" style="flex:1;height:48px"></div>`).join('');
+  return `<div id="v-tmap" class="ab" style="inset:0;display:none">
+  <div class="ab" style="left:32px;top:20px;width:1856px;display:flex;gap:10px">${lights}</div>
+  <div class="ab" style="left:32px;top:88px;width:698px;height:300px;display:flex;flex-direction:column;justify-content:center;gap:10px">
+    <span class="lab" style="font-size:22px">RPM</span><span class="num" id="tm-rpm" style="font-size:180px;line-height:.9">${NO}</span>
+    <div style="position:relative;height:24px;border-radius:4px;background:#1A1A1A;overflow:hidden"><div style="position:absolute;top:0;bottom:0;left:${REDLINE / RPM_MAX * 100}%;right:0;background:#4A1A1A"></div><div id="tm-rfill" style="position:absolute;top:0;bottom:0;left:0;width:0"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:18px;color:#8A8A8A"><span>0</span><span>3</span><span>6</span><span>9 ×1000</span></div></div>
+  <div class="ab" style="left:770px;top:88px;width:380px;height:300px;border-left:1px solid #1A1A1A;border-right:1px solid #1A1A1A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+    <span class="lab" style="font-size:20px">GEAR</span><span class="num" id="tm-gear" style="font-size:160px;line-height:.9">-</span>
+    <span style="font-size:30px;font-weight:600"><span id="tm-mph">0</span> <span style="font-size:20px;font-weight:500;color:#8A8A8A">mph</span></span></div>
+  <div class="ab" style="left:1190px;top:88px;width:698px;height:300px;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;gap:10px">
+    <span class="lab" style="font-size:22px">BOOST · PSI</span><span class="num" id="tm-boost" style="font-size:180px;line-height:.9">${NO}</span>
+    <div style="position:relative;align-self:stretch;height:24px;border-radius:4px;background:#1A1A1A"><div id="tm-bfill" style="position:absolute;top:0;bottom:0;left:0;width:0;border-radius:4px;background:#3D8BFF"></div><div style="position:absolute;top:-6px;bottom:-6px;left:${BOOST_T / BOOST_MAX * 100}%;width:4px;background:#fff"></div></div>
+    <div style="align-self:stretch;display:flex;justify-content:space-between;font-size:18px;color:#8A8A8A"><span>0</span><span>TARGET ${BOOST_T}</span><span>${BOOST_MAX}</span></div></div>
+  ${tile('tm-oil', 32, 408, fr, 216, 'OIL PRESS', 'psi')}${tile('tm-ot', 32 + fr + 20, 408, fr, 216, 'OIL TEMP', '°C')}${tile('tm-ect', 32 + 2 * (fr + 20), 408, fr, 216, 'COOLANT', '°C')}
+  <div class="tile" style="left:${32 + 3 * (fr + 20)}px;top:408px;width:${2.4 * fr}px;height:216px;padding:14px 22px;justify-content:flex-start">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="t" style="font-size:18px">TRACK MAP · OUTLINE FROM LAP 1</span><span id="tm-lap" style="font-size:18px;font-weight:600;color:#fff"></span></div>
+    <svg viewBox="0 0 570 180" width="100%" height="156" preserveAspectRatio="xMidYMid meet">
+      <path d="${OUTLINE}" fill="none" stroke="#2A2A2A" stroke-width="10" stroke-linejoin="round"/>
+      <path d="${OUTLINE}" fill="none" stroke="#8A8A8A" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M 200 144 L 200 168" stroke="#fff" stroke-width="4"/>
+      <g font-family="Barlow Semi Condensed, sans-serif" font-size="17" font-weight="600" fill="#E8E8E8" text-anchor="middle">
+        <text x="461" y="156">1</text><text x="542" y="76">2</text><text x="416" y="54">3</text><text x="370" y="114">4</text><text x="232" y="24">5</text><text x="84" y="34">6</text><text x="28" y="120">7</text></g>
+      <text x="200" y="179" font-family="Barlow, sans-serif" font-size="12" font-weight="600" fill="#8A8A8A" text-anchor="middle" letter-spacing="1">S/F</text>
+      <circle id="tm-halo" cx="300" cy="70" r="11" fill="none" stroke="#3D8BFF" stroke-width="3" opacity=".5"/><circle id="tm-dot" cx="300" cy="70" r="6" fill="#3D8BFF"/>
+    </svg></div>
+  <div class="foot" style="left:32px;top:644px;width:1856px;height:56px;padding:0 8px">
+    <span>HG WATCH ${NO}</span><span id="tm-pdm"></span><span>${pair('GPS', '10 Hz')}</span><span class="pill">TRACK · NEW</span><span style="font-size:16px">${build}</span></div>
+</div>`;
+}
+function nvHTML() {
+  return `<div id="v-nv" class="ab" style="inset:0;display:none">
+  <div class="ab" style="left:28px;top:32px;width:322px;height:656px;display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex"><span class="pill" style="color:#8A8A8A">NIGHT VISION</span></div>
+    <span class="lab" style="margin-top:40px;font-size:18px">SPEED</span>
+    <span class="num" id="nv-mph" style="font-size:190px;line-height:.85">${NO}</span>
+    <span class="lab" style="font-size:22px">MPH</span>
+    <div style="flex:1"></div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:16px;border-top:1px solid #1A1A1A"><span class="lab" style="font-size:18px">GEAR</span><span class="num" id="nv-gear" style="font-size:64px">-</span></div>
+    <span style="font-size:20px;font-weight:500;color:#8A8A8A"><span id="nv-rpm">${NO}</span> rpm</span>
+  </div>
+  <div class="ab" style="left:378px;top:24px;width:1164px;height:672px;border-radius:16px;overflow:hidden;background:#0B0B0B">
+    <svg viewBox="0 0 1164 672" width="1164" height="672" style="position:absolute;inset:0">
+      <defs>
+        <linearGradient id="nvSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050505"/><stop offset="1" stop-color="#161616"/></linearGradient>
+        <linearGradient id="nvRoad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#383838"/><stop offset="1" stop-color="#5E5E5E"/></linearGradient>
+        <radialGradient id="nvVig" cx=".5" cy=".5" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".65"/></radialGradient>
+        <filter id="nvGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="nvSoft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="2"/></filter>
+      </defs>
+      <rect width="1164" height="672" fill="url(#nvSky)"/><rect y="300" width="1164" height="372" fill="#1A1A1A"/>
+      <path d="M 0 300 L 0 246 Q 40 214 82 242 Q 124 206 172 238 Q 222 202 262 236 Q 312 212 352 248 Q 402 222 444 262 Q 500 250 540 286 L 560 300 Z" fill="#2E2E2E" filter="url(#nvSoft)"/>
+      <path d="M 1164 300 L 1164 240 Q 1122 210 1080 238 Q 1036 204 990 236 Q 942 208 900 240 Q 852 216 812 250 Q 760 230 718 266 Q 662 256 624 288 L 604 300 Z" fill="#2E2E2E" filter="url(#nvSoft)"/>
+      <polygon points="566,300 598,300 980,672 184,672" fill="url(#nvRoad)"/>
+      <path d="M 568 300 L 232 672 M 596 300 L 932 672" fill="none" stroke="#2A2A2A" stroke-width="6"/>
+      <path class="nvdash" d="M 582 306 L 582 672" fill="none" stroke="#303030" stroke-width="6" stroke-dasharray="18 28"/>
+      <g id="nv-deer" transform="translate(705 318)" fill="#EDEDED" filter="url(#nvGlow)">
+        <ellipse rx="26" ry="11"/><path d="M 18 -4 L 30 -26 L 36 -24 L 26 -2 Z"/><ellipse cx="37" cy="-28" rx="8" ry="5"/><path d="M 33 -32 L 31 -40 L 36 -34 Z"/>
+        <path d="M -18 8 L -20 30 M -10 9 L -9 31 M 14 8 L 15 30 M 20 7 L 23 29" fill="none" stroke="#E0E0E0" stroke-width="4" stroke-linecap="round"/></g>
+      <g id="nv-box"><rect x="668" y="276" width="86" height="80" rx="4" fill="none" stroke="#F5A623" stroke-width="3"/><rect x="668" y="250" width="72" height="22" rx="3" fill="#F5A623"/>
+        <text x="704" y="266" font-family="Barlow, sans-serif" font-size="14" font-weight="700" fill="#0A0A0A" text-anchor="middle" letter-spacing="1">ANIMAL</text></g>
+      <rect width="1164" height="672" fill="url(#nvVig)"/>
+    </svg>
+    <div class="ab" style="left:24px;top:20px;display:flex;flex-direction:column;gap:2px"><span style="font-size:18px;font-weight:600;letter-spacing:.14em;color:#E8E8E8">THERMAL</span><span style="font-size:16px;color:#8A8A8A">White = warm</span></div>
+    <div class="ab" style="left:0;right:0;top:18px;display:flex;justify-content:center"><span id="nv-alert" style="padding:8px 26px;border-radius:999px;background:#F5A623;color:#0A0A0A;font-size:26px;font-weight:700;letter-spacing:.08em">ANIMAL AHEAD</span></div>
+    <div class="ab" style="left:24px;right:24px;bottom:18px;display:flex;justify-content:space-between;font-size:16px;color:#8A8A8A"><span>CAMERA <b style="color:#E8E8E8">30 Hz</b> · HEATER <b style="color:#E8E8E8">ON</b></span><span>SHOWN ONLY WHEN DARK · HEADLAMPS ON · FORWARD GEAR</span></div>
+  </div>
+  <div class="ab" style="left:1566px;top:24px;width:330px;height:672px;display:flex;flex-direction:column;gap:14px">
+    ${mini('nv-oil', 'OIL PRESS', 'psi')}${mini('nv-ect', 'COOLANT', '°C')}${mini('nv-ot', 'OIL TEMP', '°C')}${mini('nv-bat', 'BATTERY', 'V')}
+    <div style="flex:1"></div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid #1A1A1A;font-size:18px;color:#8A8A8A"><span id="nv-pdm"></span><span style="font-size:16px">${build}</span></div>
+  </div>
+</div>`;
+}
+
+// Arc helper for any centre, angles in degrees (0 = east, clockwise).
+const arcAt = (cx, cy, r, a0, a1) => {
+  const p = a => [cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)];
+  const [x0, y0] = p(a0), [x1, y1] = p(a1);
+  return `M${x0.toFixed(1)} ${y0.toFixed(1)}A${r} ${r} 0 ${Math.abs(a1 - a0) > 180 ? 1 : 0} ${a1 > a0 ? 1 : 0} ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+};
+const ZONES = [[0, 5000, '#47D16C'], [5000, 6500, '#F5A623'], [6500, REDLINE, '#E24B4A'], [REDLINE, RPM_MAX, '#3D8BFF']];
+const zoneCol = rpm => (ZONES.find(z => rpm < z[1]) || ZONES[3])[2];
+const lapFmt = sec => { const m = Math.floor(sec / 60), x = sec - m * 60; return `${m}:${x.toFixed(2).padStart(5, '0')}`; };
+
+function raceHTML() {
+  const dots = Array.from({ length: 15 }, (_, i) => `<div id="rc-led${i}" style="position:absolute;left:${640 + i * 45.7 - 14}px;top:24px;width:28px;height:28px;border-radius:50%;background:#1A1A1A;border:2px solid #2A2A2A"></div>`).join('');
+  const zones = ZONES.map(z => `<div style="position:absolute;left:${z[0] / RPM_MAX * 100}%;width:${(z[1] - z[0]) / RPM_MAX * 100}%;top:0;height:8px;background:${z[2]};opacity:.9"></div>`).join('');
+  const nums = Array.from({ length: 10 }, (_, i) => `<span style="position:absolute;left:${60 + 28 + i / 9 * (1800 - 56)}px;transform:translateX(-50%);top:138px;font-size:24px;font-weight:600;color:#E8E8E8">${i}</span>`).join('');
+  const side = (id, x, y, h, label, col, unit) => `<div class="rt" style="left:${x}px;top:${y}px;width:300px;height:${h}px"><div class="h" style="color:${col}">${label}</div><div><span class="num" id="${id}" style="font-size:52px">${NO}</span><span style="font-size:24px;color:#8A8A8A"> ${unit}</span></div></div>`;
+  const bar = (id, x, label, col) => `<div class="ab" style="left:${x}px;top:190px;width:120px;height:450px;border:2px solid #D8D8D8;border-radius:12px;padding:44px 16px 14px;display:flex;flex-direction:column-reverse;gap:5px">
+    <div style="position:absolute;left:0;right:0;top:8px;text-align:center;font-size:20px;font-weight:700;color:#E8E8E8">${label}</div>
+    ${Array.from({ length: 16 }, (_, i) => `<div id="${id}${i}" data-c="${col}" style="flex:1;border-radius:3px;background:#1A1A1A"></div>`).join('')}</div>`;
+  return `<div id="v-race" class="ab" style="inset:0;display:none">
+  ${dots}
+  <div class="ab" style="left:60px;top:70px;width:1800px;height:60px;border:3px solid #D8D8D8;border-radius:30px;padding:12px 28px">
+    <div style="position:relative;height:100%">${zones}<div id="rc-fill" style="position:absolute;left:0;bottom:0;height:22px;width:0;border-radius:4px"></div></div></div>
+  ${nums}
+  ${side('rc-ect', 60, 190, 102, 'COOLANT', '#4FD1E8', '°C')}${side('rc-ot', 60, 306, 102, 'OIL TEMP', '#F5A623', '°C')}
+  ${side('rc-bat', 60, 422, 102, 'BATTERY', '#47D16C', 'V')}${side('rc-rng', 60, 538, 102, 'FUEL RANGE', '#3D8BFF', 'mi')}
+  <div class="rt" style="left:380px;top:190px;width:190px;height:160px"><div class="h">MAP</div><div class="num" id="rc-map" style="font-size:84px">2</div></div>
+  <div class="rt" style="left:584px;top:190px;width:196px;height:160px;padding:0"><div class="h" style="background:#3D8BFF;color:#fff;width:100%;padding:6px 0">TC</div><div class="num" style="flex:1;width:100%;display:flex;align-items:center;justify-content:center;background:#F5A623;color:#0A0A0A;font-size:84px" id="rc-tc">3</div></div>
+  <div class="rt" style="left:380px;top:364px;width:400px;height:130px"><div class="h" style="color:#E8E8E8">LAP</div><div class="num" id="rc-lap" style="font-size:60px">${NO}</div></div>
+  <div class="rt" style="left:380px;top:508px;width:400px;height:132px;background:#E8E8E8;border-color:#E8E8E8;color:#0A0A0A"><div class="h" style="color:#3D5A80">BEST LAP</div><div class="num" id="rc-best" style="font-size:60px">${NO}</div></div>
+  <div class="rt" style="left:800px;top:190px;width:320px;height:120px"><div class="h" style="color:#E8E8E8;font-size:20px">SPEED</div><div><span class="num" id="rc-mph" style="font-size:64px">${NO}</span><span style="font-size:22px;color:#8A8A8A"> mph</span></div></div>
+  <div class="ab" style="left:800px;top:326px;width:320px;height:314px">
+    <svg viewBox="0 0 320 314" width="320" height="314"><polygon id="rc-oct" points="92,8 228,8 312,92 312,222 228,306 92,306 8,222 8,92" fill="#0A0A0A" stroke="#47D16C" stroke-width="8" stroke-linejoin="round"/>
+      <text id="rc-gear" x="160" y="168" fill="#fff" font-size="190" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Barlow Semi Condensed, Barlow, sans-serif">-</text></svg></div>
+  <div class="rt" style="left:1140px;top:190px;width:360px;height:160px;background:#47D16C;border-color:#47D16C;color:#0A0A0A"><div class="h">BOOST</div><div><span class="num" id="rc-boost" style="font-size:84px">${NO}</span><span style="font-size:26px;font-weight:600"> psi</span></div></div>
+  <div class="rt" style="left:1140px;top:364px;width:360px;height:130px"><div class="h" style="color:#E8E8E8">G-FORCE</div><div class="num" id="rc-g" style="font-size:60px">${NO}</div></div>
+  <div class="rt" style="left:1140px;top:508px;width:360px;height:132px;padding:0;border-color:#9B7BFF"><div class="h" style="background:#9B7BFF;color:#fff;width:100%;padding:6px 0">LAMBDA</div><div class="num" id="rc-lam" style="flex:1;width:100%;display:flex;align-items:center;justify-content:center;background:#E8E8E8;color:#0A0A0A;font-size:64px">${NO}</div></div>
+  ${bar('rc-thr', 1546, 'THR', '#47D16C')}${bar('rc-brk', 1716, 'BRK', '#E24B4A')}
+  <div class="ab" style="left:60px;top:654px;width:1800px;height:48px;display:flex;justify-content:space-between;align-items:center;font-size:22px;color:#8A8A8A">
+    <span id="rc-clock" style="color:#fff;font-weight:600"></span><span id="rc-iat"></span><span class="pill">RACE</span><span style="font-size:16px">${build}</span></div>
+</div>`;
+}
+
+function sportHTML() {
+  // Round tach, 640 x 640, centre (320, 320): 0-9 x1000 rpm over the same 270° sweep as the Road dial.
+  let ticks = '', labs = '';
+  for (let v = 0; v <= 9000; v += 250) {
+    const a = ang(v / 9000), mj = v % 1000 === 0, r0 = mj ? 272 : 284, rad = a * Math.PI / 180;
+    ticks += `<line x1="${(320 + r0 * Math.cos(rad)).toFixed(1)}" y1="${(320 + r0 * Math.sin(rad)).toFixed(1)}" x2="${(320 + 296 * Math.cos(rad)).toFixed(1)}" y2="${(320 + 296 * Math.sin(rad)).toFixed(1)}" stroke="${v >= REDLINE ? '#E24B4A' : mj ? '#E8E8E8' : '#5A5A5A'}" stroke-width="${mj ? 4 : 2}"/>`;
+    if (mj) labs += `<text x="${(320 + 238 * Math.cos(rad)).toFixed(1)}" y="${(320 + 238 * Math.sin(rad)).toFixed(1)}" fill="${v >= 8000 ? '#E24B4A' : '#E8E8E8'}" font-size="40" font-weight="600" text-anchor="middle" dominant-baseline="central" font-family="Barlow Semi Condensed, Barlow, sans-serif">${v / 1000}</text>`;
+  }
+  const seg = (id, a0, a1, n) => Array.from({ length: n }, (_, i) => {
+    const g = Math.sign(a1 - a0) * 0.9, s0 = a0 + (a1 - a0) * i / n + g, s1 = a0 + (a1 - a0) * (i + 1) / n - g;
+    return `<path id="${id}${i}" d="${arcAt(960, 360, 352, s0, s1)}" stroke="#242424" stroke-width="22" fill="none"/>`;
+  }).join('');
+  const ring = (id, x, y, label, col) => `<div class="ab" style="left:${x}px;top:${y}px;width:170px;text-align:center">
+    <div style="font-size:24px;font-weight:700;letter-spacing:.06em;color:#E8E8E8;margin-bottom:6px">${label}</div>
+    <svg viewBox="0 0 170 170" width="170" height="170"><path d="${arcAt(85, 85, 66, 135, 405)}" stroke="#1A1A1A" stroke-width="12" fill="none" stroke-linecap="round"/>
+      <path id="${id}-arc" d="" stroke="${col}" stroke-width="12" fill="none" stroke-linecap="round"/>
+      <text id="${id}" x="85" y="88" fill="#fff" font-size="40" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Barlow Semi Condensed, Barlow, sans-serif">${NO}</text></svg></div>`;
+  const tempArc = (id, y, label) => `<div class="ab" style="left:1676px;top:${y}px;width:230px;height:250px">
+    <svg viewBox="0 0 200 250" width="200" height="250" style="position:absolute;inset:0"><path d="${arcAt(-40, 125, 150, -40, 40)}" stroke="#2A2A2A" stroke-width="12" fill="none"/>
+      <path id="${id}-arc" d="" stroke="#E8E8E8" stroke-width="12" fill="none"/><path d="${arcAt(-40, 125, 150, -40, -33)}" stroke="#E24B4A" stroke-width="12" fill="none"/></svg>
+    <div style="position:absolute;left:124px;top:96px;font-size:16px;font-weight:600;letter-spacing:.1em;color:#8A8A8A">${label}</div>
+    <div style="position:absolute;left:124px;top:118px;font-size:36px;font-weight:700"><span id="${id}">${NO}</span><span style="font-size:20px;color:#8A8A8A"> °C</span></div></div>`;
+  return `<div id="v-sport" class="ab" style="inset:0;display:none">
+  <div id="sp-map" class="ab mv" style="left:60px;top:100px;width:900px;height:540px;border-radius:18px;overflow:hidden;background:#07090C;border:1px solid #1A1A1A">
+    <svg viewBox="640 20 1000 600" width="900" height="540" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0">
+      <path d="M 300 700 C 520 600 640 520 760 470 S 980 420 1080 300 M 380 120 C 560 160 700 120 820 40 M 1240 700 C 1300 600 1420 560 1600 540 M 1220 180 C 1360 230 1500 200 1700 120" fill="none" stroke="#0F141A" stroke-width="2"/><path d="M 1060 520 C 1200 560 1350 600 1500 720 M 1140 345 C 1300 300 1420 330 1600 260 M 860 232 C 760 220 640 250 480 200 M 1010 600 C 900 640 760 650 560 720" fill="none" stroke="#1C222A" stroke-width="6" stroke-linecap="round"/>
+      <path d="${ROUTE}" fill="none" stroke="#262D36" stroke-width="26" stroke-linecap="round"/><path d="${ROUTE}" fill="none" stroke="#3D8BFF" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+      <text x="1196" y="478" fill="#8A8A8A" font-family="Barlow, sans-serif" font-size="20" font-weight="600" letter-spacing="2">CANYON RD</text>
+      <g id="sp-car"><polygon points="0,-24 15,15 0,6 -15,15" fill="#fff" stroke="#0A0A0A" stroke-width="3"/></g></svg>
+    <div class="ab" style="left:20px;bottom:16px;font-size:16px;color:#8A8A8A">${pair('MAP', 'OFFLINE')}</div></div>
+  <div id="sp-strip" class="ab mv" style="left:60px;top:36px;width:900px;height:48px;display:flex;gap:36px;align-items:center;font-size:22px;color:#8A8A8A;border-bottom:1px solid #2A2A2A">
+    <span>MAP <b id="sp-m2" style="color:#fff">2</b></span><span>TC <b id="sp-t2" style="color:#fff">3</b></span><span>DCCD <b id="sp-d2" style="color:#fff">AUTO</b></span><span>AWIC <b id="sp-awic2" style="color:#fff">${NO}</b></span></div>
+  <svg id="sp-flanks" class="ab mv" viewBox="0 0 1920 720" width="1920" height="720" style="left:0;top:0">${seg('sp-thr', 210, 150, 12)}${seg('sp-bst', -30, 30, 12)}
+    <text x="584" y="560" fill="#8A8A8A" font-size="16" font-weight="600" letter-spacing="2" text-anchor="middle" font-family="Barlow, sans-serif">THROTTLE</text>
+    <text x="1336" y="560" fill="#8A8A8A" font-size="16" font-weight="600" letter-spacing="2" text-anchor="middle" font-family="Barlow, sans-serif">BOOST</text></svg>
+  <div class="sp-rings mv ab" style="inset:0;pointer-events:none">${ring('sp-map1', 250, 120, 'MAP', '#E24B4A')}${ring('sp-tc', 250, 380, 'TC', '#3D8BFF')}${ring('sp-dccd', 1500, 120, 'DCCD', '#E8E8E8')}${ring('sp-awic', 1500, 380, 'AWIC', '#F5D547')}</div>
+  <div id="sp-tach" class="ab mv" style="left:640px;top:40px;width:640px;height:640px">
+    <svg viewBox="0 0 640 640" width="640" height="640">
+      <path d="${arcAt(320, 320, 300, 135, 405)}" stroke="#1A1A1A" stroke-width="6" fill="none"/>
+      <path id="sp-rarc" d="" stroke="#E8E8E8" stroke-width="6" fill="none"/>
+      <path d="${arcAt(320, 320, 300, ang(REDLINE / 9000), 405)}" stroke="#E24B4A" stroke-width="6" fill="none"/>
+      ${ticks}${labs}
+      <path id="sp-mark" d="" stroke="#E24B4A" stroke-width="30" fill="none"/>
+      <path d="${arcAt(320, 320, 200, 112, 68)}" stroke="#2A2A2A" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <text x="236" y="520" fill="#8A8A8A" font-size="20" font-weight="600" text-anchor="middle" font-family="Barlow, sans-serif">E</text>
+      <text x="404" y="520" fill="#8A8A8A" font-size="20" font-weight="600" text-anchor="middle" font-family="Barlow, sans-serif">F</text>
+      <text x="320" y="556" fill="#8A8A8A" font-size="18" font-weight="600" text-anchor="middle" font-family="Barlow, sans-serif">FUEL ${NO}</text>
+    </svg>
+    <div class="ab" style="left:170px;top:190px;width:300px;text-align:center">
+      <div class="num" id="sp-mph" style="font-size:150px">${NO}</div>
+      <div style="font-size:24px;font-weight:600;color:#8A8A8A">mph</div>
+      <div style="display:inline-block;margin-top:14px;border:2px solid #E8E8E8;border-radius:10px;padding:2px 18px"><span class="num" id="sp-gear" style="font-size:48px">-</span></div></div>
+  </div>
+  ${tempArc('sp-ect', 120, 'COOLANT')}${tempArc('sp-ot', 380, 'OIL')}
+  <div class="ab" style="left:60px;top:664px;width:1640px;display:flex;justify-content:space-between;font-size:22px;color:#8A8A8A">
+    <span id="sp-clock" style="color:#fff;font-weight:600"></span><span id="sp-iat"></span><span style="font-size:16px">${build}</span></div>
+</div>`;
+}
+
+$('stage').innerHTML = trackHTML() + roadHTML() + pdmHTML() + nmapHTML() + tmapHTML() + nvHTML() + raceHTML() + sportHTML() + '<div class="wm"><div>SIMULATED DATA</div></div>';
+
+// Points along the map route and the track outline, sampled once.
+function sampler(dpath, n) {
+  try {
+    const ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg'), p = document.createElementNS(ns, 'path');
+    svg.setAttribute('style', 'position:absolute;visibility:hidden;width:0;height:0'); p.setAttribute('d', dpath);
+    svg.appendChild(p); document.body.appendChild(svg);
+    const L = p.getTotalLength(), pts = [];
+    for (let i = 0; i <= n; i++) { const q = p.getPointAtLength(L * i / n); pts.push([q.x, q.y]); }
+    svg.remove(); return { L, pts };
+  } catch (err) { return null; }
+}
+const pointAt = (sp, f) => {
+  f = ((f % 1) + 1) % 1;
+  const i = f * (sp.pts.length - 1), j = Math.floor(i), a = sp.pts[j], b = sp.pts[Math.min(sp.pts.length - 1, j + 1)], k = i - j;
+  return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI];
+};
+const ROUTE_S = sampler(ROUTE, 600), OUTLINE_S = sampler(OUTLINE, 600);
+let SF = 0;   // fraction of the outline nearest the start/finish line at (200, 156)
+if (OUTLINE_S) { let best = 1e9; OUTLINE_S.pts.forEach((q, i) => { const e = (q[0] - 200) ** 2 + (q[1] - 156) ** 2; if (e < best) { best = e; SF = i / (OUTLINE_S.pts.length - 1); } }); }
+let routeD = 0, nvT0 = 0, mapOn = false;
+const CONCEPT_CAP = {
+  race: 'Not built yet: a race grid. Bar tach with shift lights, the gear in the middle, lap timer and best lap, g-force, and throttle and brake bars. MAP and TC show sample values.',
+  sport: 'Not built yet: a round tach in the middle, mode rings on the left, DCCD and intercooler pump on the right, coolant and oil arcs at the edge. Press Bring in map to see it change.',
+  sportmap: 'The same screen with the map in: the rings fold into one line at the top and the tach slides right. Ring values are samples; which modes exist is still to decide.',
+  nmap: 'Not built yet: a dark, heading-up map behind the readings for night and canyon roads. The map here is a drawing; the pod would use offline maps.',
+  tmap: 'Not built yet: on a new track, the first lap records the outline from GPS. After that the dot shows where you are, with lap and sector.',
+  nv: 'Not built yet: a thermal camera view for dark roads, like Cadillac\'s Night Vision. Warm things show white, and an animal near the road gets flagged.'
+};
+
+// ── Rendering ──
+const txt = (id, v) => { const e = $(id); if (e.textContent !== v) e.textContent = v; };
+function setTile(id, live, val, alert, label) {
+  txt(id + '-v', live ? val : NO);
+  $(id + '-v').classList.toggle('dim', !live);
+  const u = $(id + '-u'); if (u) u.style.visibility = live ? 'visible' : 'hidden';
+  $(id).classList.toggle('alert', !!alert);
+  if (label) txt(id + '-t', label);
+}
+function setDial(id, f, live) {
+  const a = ang(f);
+  $(id + '-acc').setAttribute('d', live && f > 0.001 ? arc(262, 135, a) : '');
+  const r = a * Math.PI / 180, nd = $(id + '-nd');
+  nd.style.display = live ? '' : 'none';
+  nd.setAttribute('x1', 280 + 155 * Math.cos(r)); nd.setAttribute('y1', 280 + 155 * Math.sin(r));
+  nd.setAttribute('x2', 280 + 250 * Math.cos(r)); nd.setAttribute('y2', 280 + 250 * Math.sin(r));
+}
+function render() {
+  const ls = linkState(), live = ls === 'live', w = pending(), oilLow = live && W.oil.active;
+  const gs = 'GEAR ' + gearText(d.gear) + ' · ' + Math.round(mph()) + ' mph';
+  if (view === 'track') {
+    const shift = live && d.rpm >= SHIFT;
+    let lit = 0;
+    if (live) lit = shift ? 15 : Math.max(0, Math.min(15, Math.floor((d.rpm - (SHIFT - 2300)) / (2300 / 14)) + 1));
+    for (let i = 0; i < 15; i++) $('sl' + i).style.background = lightCol(i, lit, shift);
+    txt('t-rpm', live ? grouped(d.rpm) : NO); $('t-rpm').classList.toggle('dim', !live);
+    $('t-red').style.display = live ? '' : 'none';
+    const rf = $('t-rfill'); rf.style.width = live ? Math.min(100, d.rpm / RPM_MAX * 100) + '%' : '0';
+    rf.style.background = d.rpm >= REDLINE ? '#E24B4A' : '#E8E8E8';
+    const mode = !live ? 'link' : w.length ? 'warn' : 'normal';
+    $('t-normal').style.display = mode === 'normal' ? 'flex' : 'none';
+    $('t-warn').style.display = mode === 'warn' ? 'flex' : 'none';
+    $('t-link').style.display = mode === 'link' ? 'flex' : 'none';
+    if (mode === 'normal') { txt('t-gear', gearText(d.gear)); txt('t-mph', String(Math.round(mph()))); }
+    if (mode === 'warn') {
+      const top = w[0]; txt('t-wt', top.title); txt('t-wg', gs);
+      $('t-wb').innerHTML = top.kind === 'oil'
+        ? `<span style="font-size:150px">${Math.round(d.oil)}</span><span style="font-size:40px;font-family:Barlow,sans-serif;font-weight:600"> psi</span>`
+        : `<span style="font-size:88px;line-height:.95;display:block">CH${top.ch}<br>TRIPPED</span>`;
+    }
+    if (mode === 'link') { txt('t-lt', linkTitle(ls)); txt('t-ld', linkDetail(ls)); }
+    const b = boostPsi();
+    txt('t-boost', live ? b.toFixed(1) : NO); $('t-boost').classList.toggle('dim', !live);
+    $('t-bfill').style.width = live ? Math.max(0, Math.min(100, b / BOOST_MAX * 100)) + '%' : '0';
+    $('t-bmark').style.display = live ? '' : 'none';
+    setTile('t-oil', live, String(Math.round(d.oil)), oilLow, oilLow ? 'OIL PRESS · LOW' : 'OIL PRESS');
+    setTile('t-lam', live, d.lam.toFixed(2)); setTile('t-ot', live, String(Math.round(d.oilT))); setTile('t-ect', live, String(Math.round(d.ect)));
+    const pdmTxt = pdm.faults ? `PDM <b style="color:#E24B4A">${pdm.faults} FAULT</b> <b>· ${pdm.v.toFixed(1)} V · ${Math.round(pdm.tot)} A</b>` : pair('PDM', `OK · ${pdm.v.toFixed(1)} V · ${Math.round(pdm.tot)} A`);
+    const items = mode === 'normal' ? [pair('IAT', Math.round(d.iat) + ' °C'), pair('ETHANOL', Math.round(d.eth) + ' %'), pdmTxt, 'DCCD <b>NO SOURCE</b>']
+      : mode === 'warn' ? [`<b style="color:#E24B4A;font-weight:700;letter-spacing:.08em">MASTER WARNING · ${w.length} EVENT${w.length > 1 ? 'S' : ''}</b>`, pair('IAT', Math.round(d.iat) + ' °C'), pdmTxt]
+      : [`<b style="color:#F5A623;font-weight:700;letter-spacing:.08em">${linkLine(ls)}</b>`, 'IAT ' + NO, 'PDM ' + NO];
+    const html = items.map(x => `<span>${x}</span>`).join('') + '<span class="pill">TRACK</span>' + `<span style="font-size:16px">${build}</span>`;
+    if ($('t-foot').innerHTML !== html) $('t-foot').innerHTML = html;
+  } else if (view === 'road') {
+    const lit = live ? Math.round(Math.max(0, Math.min(1, (d.ect - 50) / 80)) * 10) : 0;
+    for (let i = 0; i < 10; i++) $('r-e' + i).style.background = i >= 10 - lit ? '#E8E8E8' : '#1A1A1A';
+    setDial('r-r', d.rpm / RPM_MAX, live); setDial('r-s', mph() / MPH_MAX, live);
+    txt('r-gear', live ? gearText(d.gear) : NO); $('r-gear').classList.toggle('dim', !live);
+    txt('r-rpm', live ? grouped(d.rpm) : NO);
+    txt('r-mph', live ? String(Math.round(mph())) : NO); $('r-mph').classList.toggle('dim', !live);
+    const p = $('r-pill'), warn = live && w.length;
+    txt('r-pill', !live ? linkLine(ls) : warn ? `MASTER WARNING · ${w.length} EVENT${w.length > 1 ? 'S' : ''}` : 'ROAD');
+    p.style.color = !live ? '#F5A623' : warn ? '#E24B4A' : '#8A8A8A';
+    p.style.borderColor = !live ? '#F5A623' : warn ? '#E24B4A' : '#2A2A2A';
+    setTile('r-oil', live, String(Math.round(d.oil)), oilLow, oilLow ? 'OIL PRESS · LOW' : 'OIL PRESS');
+    setTile('r-ot', live, String(Math.round(d.oilT))); setTile('r-ect', live, String(Math.round(d.ect)));
+    setTile('r-lam', live, d.lam.toFixed(2)); setTile('r-bat', live, d.bat.toFixed(1)); setTile('r-eth', live, String(Math.round(d.eth)));
+    $('r-iat').innerHTML = live ? pair('IAT', Math.round(d.iat) + ' °C') : 'IAT ' + NO;
+  } else if (view === 'nmap') {
+    txt('nm-mph', live ? String(Math.round(mph())) : NO); txt('nm-gear', live ? gearText(d.gear) : NO); txt('nm-rpm', live ? grouped(d.rpm) : NO);
+    $('nm-rfill').style.width = live ? Math.min(100, d.rpm / RPM_MAX * 100) + '%' : '0';
+    txt('nm-oil', live ? String(Math.round(d.oil)) : NO); txt('nm-ect', live ? String(Math.round(d.ect)) : NO);
+    txt('nm-ot', live ? String(Math.round(d.oilT)) : NO); txt('nm-bat', live ? d.bat.toFixed(1) : NO);
+    $('nm-pdm').innerHTML = live ? pdmLine() : 'PDM ' + NO;
+    if (ROUTE_S) {
+      const [x, y, a] = pointAt(ROUTE_S, routeD / ROUTE_S.L);
+      $('nm-car').setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(a + 90).toFixed(1)})`);
+      txt('nm-hdg', String(Math.round(((a + 90) % 360 + 360) % 360)).padStart(3, '0') + '°');
+    }
+  } else if (view === 'tmap') {
+    const shift = live && d.rpm >= SHIFT;
+    const lit = !live ? 0 : shift ? 15 : Math.max(0, Math.min(15, Math.floor((d.rpm - (SHIFT - 2300)) / (2300 / 14)) + 1));
+    for (let i = 0; i < 15; i++) $('tm-sl' + i).style.background = lightCol(i, lit, shift);
+    txt('tm-rpm', live ? grouped(d.rpm) : NO); txt('tm-gear', live ? gearText(d.gear) : NO); txt('tm-mph', live ? String(Math.round(mph())) : NO);
+    const rf = $('tm-rfill'); rf.style.width = live ? Math.min(100, d.rpm / RPM_MAX * 100) + '%' : '0'; rf.style.background = d.rpm >= REDLINE ? '#E24B4A' : '#E8E8E8';
+    const b = boostPsi(); txt('tm-boost', live ? b.toFixed(1) : NO);
+    $('tm-bfill').style.width = live ? Math.max(0, Math.min(100, b / BOOST_MAX * 100)) + '%' : '0';
+    setTile('tm-oil', live, String(Math.round(d.oil))); setTile('tm-ot', live, String(Math.round(d.oilT))); setTile('tm-ect', live, String(Math.round(d.ect)));
+    const t = frozenT >= 0 ? frozenT : simT, lapF = (t % LAP_S) / LAP_S;
+    txt('tm-lap', `LAP ${Math.floor(t / LAP_S) + 2} · SECTOR ${Math.min(3, Math.floor(lapF * 3) + 1)}`);
+    if (OUTLINE_S) {
+      const [x, y] = pointAt(OUTLINE_S, SF + lapF);
+      for (const id of ['tm-dot', 'tm-halo']) { $(id).setAttribute('cx', x.toFixed(1)); $(id).setAttribute('cy', y.toFixed(1)); }
+    }
+    $('tm-pdm').innerHTML = live ? pdmLine() : 'PDM ' + NO;
+  } else if (view === 'race') {
+    const shift = live && d.rpm >= SHIFT;
+    const lit = !live ? 0 : shift ? 15 : Math.max(0, Math.min(15, Math.floor((d.rpm - (SHIFT - 2300)) / (2300 / 14)) + 1));
+    for (let i = 0; i < 15; i++) $('rc-led' + i).style.background = lightCol(i, lit, shift);
+    const f = $('rc-fill'); f.style.width = live ? Math.min(100, d.rpm / RPM_MAX * 100) + '%' : '0'; f.style.background = zoneCol(d.rpm);
+    txt('rc-ect', live ? String(Math.round(d.ect)) : NO); txt('rc-ot', live ? String(Math.round(d.oilT)) : NO); txt('rc-bat', live ? d.bat.toFixed(1) : NO); txt('rc-rng', NO);
+    const t = frozenT >= 0 ? frozenT : simT;
+    txt('rc-lap', live ? lapFmt(t % LAP_S) : NO); txt('rc-best', live && t >= LAP_S ? lapFmt(LAP_S) : NO);
+    txt('rc-mph', live ? String(Math.round(mph())) : NO); txt('rc-gear', live ? gearText(d.gear) : NO);
+    $('rc-gear').setAttribute('font-size', live ? 190 : 80); txt('rc-map', live ? '2' : NO); txt('rc-tc', live ? '3' : NO);
+    $('rc-map').style.fontSize = $('rc-tc').style.fontSize = live ? '84px' : '48px';
+    $('rc-oct').setAttribute('stroke', !live ? '#2A2A2A' : shift ? '#3D8BFF' : lit > 11 ? '#E24B4A' : lit > 7 ? '#F5A623' : '#47D16C');
+    txt('rc-boost', live ? boostPsi().toFixed(1) : NO); txt('rc-g', live ? (d.g >= 0 ? '+' : '') + d.g.toFixed(1) + ' G' : NO); txt('rc-lam', live ? d.lam.toFixed(2) : NO);
+    for (const [id, v] of [['rc-thr', live ? d.thr : 0], ['rc-brk', live ? d.brk : 0]]) {
+      const n = Math.round(v * 16);
+      for (let i = 0; i < 16; i++) { const e = $(id + i); e.style.background = i < n ? e.dataset.c : '#1A1A1A'; }
+    }
+    txt('rc-clock', clock()); $('rc-iat').innerHTML = live ? pair('IAT', Math.round(d.iat) + ' °C') : 'IAT ' + NO;
+  } else if (view === 'sport') {
+    const f = live ? Math.min(1, d.rpm / 9000) : 0;
+    $('sp-rarc').setAttribute('d', f > 0.001 ? arcAt(320, 320, 300, 135, ang(f)) : '');
+    $('sp-mark').setAttribute('d', live ? arcAt(320, 320, 283, ang(f) - 5, ang(f)) : '');
+    txt('sp-mph', live ? String(Math.round(mph())) : NO); txt('sp-gear', live ? gearText(d.gear) : NO);
+    const b = boostPsi(), thrN = live ? Math.round(d.thr * 12) : 0, bstN = live ? Math.round(Math.max(0, Math.min(1, b / BOOST_MAX)) * 12) : 0;
+    for (let i = 0; i < 12; i++) { $('sp-thr' + i).setAttribute('stroke', i < thrN ? '#E8E8E8' : '#242424'); $('sp-bst' + i).setAttribute('stroke', i < bstN ? '#3D8BFF' : '#242424'); }
+    const awic = live ? Math.round(Math.max(30, Math.min(100, 30 + Math.max(0, b) * 2.5))) : 0;
+    const rings = [['sp-map1', live ? '2' : NO, live ? 2 / 3 : 0], ['sp-tc', live ? '3' : NO, live ? 0.3 : 0], ['sp-dccd', live ? 'AUTO' : NO, live ? 0.4 : 0], ['sp-awic', live ? awic + '%' : NO, awic / 100]];
+    txt('sp-m2', live ? '2' : NO); txt('sp-t2', live ? '3' : NO); txt('sp-d2', live ? 'AUTO' : NO);
+    for (const [id, v, fr] of rings) { txt(id, v); $(id + '-arc').setAttribute('d', fr > 0 ? arcAt(85, 85, 66, 135, 135 + 270 * fr) : ''); }
+    txt('sp-awic2', live ? awic + '%' : NO);
+    for (const [id, v] of [['sp-ect', d.ect], ['sp-ot', d.oilT]]) {
+      txt(id, live ? String(Math.round(v)) : NO);
+      const fr = live ? Math.max(0, Math.min(1, (v - 50) / 90)) : 0;
+      $(id + '-arc').setAttribute('d', fr > 0 ? arcAt(-40, 125, 150, 40, 40 - 80 * fr) : '');
+    }
+    if (ROUTE_S && mapOn) {
+      const [x, y, a] = pointAt(ROUTE_S, routeD / ROUTE_S.L);
+      $('sp-car').setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(a + 90).toFixed(1)})`);
+    }
+    txt('sp-clock', clock()); $('sp-iat').innerHTML = live ? pair('IAT', Math.round(d.iat) + ' °C') : 'IAT ' + NO;
+  } else if (view === 'nv') {
+    txt('nv-mph', live ? String(Math.round(mph())) : NO); txt('nv-gear', live ? gearText(d.gear) : NO); txt('nv-rpm', live ? grouped(d.rpm) : NO);
+    txt('nv-oil', live ? String(Math.round(d.oil)) : NO); txt('nv-ect', live ? String(Math.round(d.ect)) : NO);
+    txt('nv-ot', live ? String(Math.round(d.oilT)) : NO); txt('nv-bat', live ? d.bat.toFixed(1) : NO);
+    const cyc = ((now() - nvT0) / 1000) % 14, deer = cyc > 1.5 && cyc < 9.5;
+    $('nv-deer').style.display = deer ? '' : 'none'; $('nv-box').style.display = deer ? '' : 'none';
+    $('nv-alert').style.visibility = deer ? 'visible' : 'hidden';
+    $('nv-pdm').innerHTML = live ? pdmLine() : 'PDM ' + NO;
+  } else {
+    const has = live;
+    $('p-v').innerHTML = has ? pair('SUPPLY', pdm.v.toFixed(1) + ' V') : 'SUPPLY ' + NO;
+    $('p-a').innerHTML = has ? pair('TOTAL', Math.round(pdm.tot) + ' A') : 'TOTAL ' + NO;
+    const f = $('p-f');
+    f.textContent = !has ? linkTitle(ls) : pdm.faults ? pdm.faults + ' FAULT' + (pdm.faults > 1 ? 'S' : '') : 'NO FAULTS';
+    f.style.color = !has ? '#F5A623' : pdm.faults ? '#E24B4A' : '#fff';
+    for (let c = 1; c <= 28; c++) {
+      const st = pdm.st[c - 1], el = $('c' + c);
+      el.classList.toggle('on', !!chName(c)); el.classList.toggle('trip', has && st >= 2);
+      txt('c' + c + 's', has ? (st === 1 ? 'ON' : st >= 2 ? 'TRIP' : 'OFF') : NO);
+      txt('c' + c + 'a', !has ? NO : st === 0 ? '—' : pdm.a[c - 1].toFixed(1) + ' A');
+    }
+  }
+}
+
+// ── Fit the panel to the screen ──
+const screen = $('screen'), stage = $('stage');
+new ResizeObserver(() => { stage.style.transform = `scale(${screen.clientWidth / 1920})`; }).observe(screen);
+
+// ── Controls ──
+function setView(v, fromUser) {
+  if (v === 'sport' && view !== 'sport' && fromUser) setMorph(false);   // the round tach always opens on its gauges
+  view = v;
+  if (v === 'nv') nvT0 = now();
+  for (const k of ['track', 'road', 'pdm', 'nmap', 'tmap', 'nv', 'race', 'sport']) $('v-' + k).style.display = k === v ? '' : 'none';
+  if (fromUser) {
+    if (CONCEPT_CAP[v]) { txt('capn', 'Concept'); txt('capt', v === 'sport' && mapOn ? CONCEPT_CAP.sportmap : CONCEPT_CAP[v]); }
+    else { txt('capn', 'Live'); txt('capt', 'Free play. Use the buttons to show any state.'); }
+  }
+  document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', b.dataset.view === v));
+  render();
+}
+function setMorph(on) {
+  mapOn = on;
+  $('v-sport').classList.toggle('mapon', on);
+  $('morph').setAttribute('aria-pressed', on); $('morph').textContent = on ? 'Show gauges' : 'Bring in map';
+}
+function syncButtons() {
+  document.querySelectorAll('[data-f]').forEach(b => b.setAttribute('aria-pressed', F[b.dataset.f]));
+  $('pause').textContent = paused ? 'Resume lap' : 'Pause lap';
+}
+
+// ── Guided tour ──
+const TOUR = [
+  { v: 'track', go: () => resetAll(), ms: 9000, c: 'Track view. Shift lights across the top, rpm on the left, gear and speed in the middle, boost against its target on the right.' },
+  { go: () => { frozenT = moment('shift'); }, ms: 4500, c: 'At the shift point every light turns blue.' },
+  { go: () => { frozenT = moment('high'); setFault('oil', true); }, ms: 7000, c: 'Oil pressure drops to 18 psi at speed. After 0.3 s the master warning latches: red card, red tile, and an event count in the footer.' },
+  { go: () => { setFault('oil', false); frozenT = -1; }, ms: 4500, c: 'The pressure recovers, but the warning stays until the driver acknowledges it.' },
+  { go: () => acknowledge(), ms: 3000, c: 'Acknowledged. The card clears.' },
+  { go: () => setFault('pdm', true), ms: 6000, c: 'The power module trips fuel pump 2 on output CH26. The card names the output.' },
+  { v: 'pdm', ms: 6000, c: 'The PDM page shows all 28 outputs with their state and current draw.' },
+  { v: 'track', go: () => { setFault('pdm', false); acknowledge(); setFault('nocan', true); }, ms: 6000, c: 'The CAN interface goes missing. Every reading turns to dashes, so no old number stays on screen.' },
+  { go: () => { setFault('nocan', false); setTimeout(() => { if (tour.on) setFault('stale', true); }, 600); }, ms: 6500, c: 'Frames stop arriving. After half a second the screen says so and counts how old the last frame is.' },
+  { v: 'road', go: () => setFault('stale', false), ms: 9000, c: 'Road view: dials for rpm and speed, six engine readings, coolant and fuel bars. Fuel level has no sensor yet, so its bar stays dark.' },
+  { v: 'nmap', ms: 9000, c: CONCEPT_CAP.nmap },
+  { v: 'tmap', ms: 9000, c: CONCEPT_CAP.tmap },
+  { v: 'nv', ms: 10000, c: CONCEPT_CAP.nv },
+  { v: 'race', ms: 9000, c: CONCEPT_CAP.race },
+  { v: 'sport', go: () => setMorph(false), ms: 7000, c: CONCEPT_CAP.sport },
+  { go: () => setMorph(true), ms: 8000, c: CONCEPT_CAP.sportmap },
+  { v: 'track', go: () => resetAll(), ms: 0, c: 'End of the tour. Try any state with the buttons below.' },
+];
+const tour = { on: false, i: 0, timer: 0 };
+function tourStep() {
+  const s = TOUR[tour.i];
+  if (s.go) s.go();
+  if (s.v) setView(s.v);
+  txt('capn', tour.i < TOUR.length - 1 ? `${tour.i + 1} / ${TOUR.length - 1}` : 'Done');
+  txt('capt', s.c);
+  syncButtons();
+  if (s.ms && tour.i < TOUR.length - 1) { tour.i++; tour.timer = setTimeout(tourStep, s.ms); } else stopTour(false);
+}
+function startTour() { tour.on = true; tour.i = 0; $('tour').textContent = 'Stop tour'; tourStep(); }
+function stopTour(manual) {
+  clearTimeout(tour.timer); tour.on = false; $('tour').textContent = 'Play tour';
+  if (manual) { frozenT = -1; txt('capn', 'Live'); txt('capt', 'Free play. Use the buttons to show any state.'); }
+}
+const manual = fn => (...a) => { if (tour.on) stopTour(true); fn(...a); syncButtons(); render(); };
+
+$('tour').addEventListener('click', () => tour.on ? stopTour(true) : startTour());
+$('pause').addEventListener('click', manual(() => { paused = !paused; }));
+$('reset').addEventListener('click', manual(() => resetAll()));
+$('ack').addEventListener('click', manual(() => acknowledge()));
+$('morph').addEventListener('click', manual(() => {
+  if (view !== 'sport') { setMorph(false); setView('sport'); requestAnimationFrame(() => setTimeout(() => setMorph(true), 60)); }
+  else setMorph(!mapOn);
+  txt('capn', 'Concept'); txt('capt', mapOn || view !== 'sport' ? CONCEPT_CAP.sportmap : CONCEPT_CAP.sport);
+}));
+document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', manual(() => setView(b.dataset.view, true))));
+document.querySelectorAll('[data-f]').forEach(b => b.addEventListener('click', manual(() => setFault(b.dataset.f, !F[b.dataset.f]))));
+const fsBtn = $('fs'), pod = document.querySelector('.pod');
+if (!document.fullscreenEnabled) fsBtn.hidden = true;
+async function toggleFs() {
+  try { if (document.fullscreenElement) await document.exitFullscreen(); else await pod.requestFullscreen(); }
+  catch (err) { fsBtn.hidden = true; }
+}
+fsBtn.addEventListener('click', toggleFs);
+document.addEventListener('fullscreenchange', () => { fsBtn.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen'; });
+document.addEventListener('keydown', e => {
+  if (e.target.closest('button') && (e.key === 'Enter' || e.key === ' ')) return;
+  if (e.key === 't') { e.preventDefault(); tour.on ? stopTour(true) : startTour(); return; }
+  if (e.key === 'f') { e.preventDefault(); toggleFs(); return; }
+  const k = { '1': () => setView('road', true), '2': () => setView('track', true), '3': () => setView('pdm', true), 'm': () => setView(view === 'pdm' ? 'track' : 'pdm', true),
+    '4': () => setView('nmap', true), '5': () => setView('tmap', true), '6': () => setView('nv', true),
+    '7': () => setView('race', true), '8': () => setView('sport', true), '9': () => $('morph').click(),
+    'Enter': () => acknowledge(), ' ': () => { paused = !paused; }, 'o': () => setFault('oil', !F.oil), 'p': () => setFault('pdm', !F.pdm),
+    'n': () => setFault('nocan', !F.nocan), 's': () => setFault('stale', !F.stale), 'w': () => setFault('waiting', !F.waiting) }[e.key];
+  if (k) { e.preventDefault(); manual(k)(); }
+});
+
+// ── Run: 20 Hz data, 10 Hz supervision, like the app ──
+let n = 0;
+setInterval(() => { simTick(); if (++n % 2 === 0) supervise(); render(); }, 50);
+syncButtons();
+}
+</script>
+</body>
+</html>
