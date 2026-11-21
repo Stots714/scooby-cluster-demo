@@ -138,7 +138,7 @@ button.go{background:var(--acc);border-color:var(--acc);color:#04101f}
     <div><h2>Where it stands</h2><p>The app runs on a desktop with this simulated lap. It hasn't been in the car yet.</p></div>
     <div><h2>Ideas next</h2><p>A dark map for night and canyon roads, a track map drawn from the first lap, and a thermal night-vision view are recorded as an idea, with nothing decided. The race grid and the round tach with its map are design directions to grow into.</p></div>
   </div>
-  <p class="note">This page re-creates the app's screens in the browser. All values are simulated. Shift point 7,300 rpm, redline 7,500 rpm and the oil warning (below 25 psi above 2,500 rpm) are placeholders still to be set. Keys: 1, 2 and 3 switch screens, 4 to 8 show the concepts, 9 brings the map in or out, T plays the tour, Enter acknowledges, Space pauses, F goes full screen.</p>
+  <p class="note">This page re-creates the app's screens in the browser. All values are simulated. Redline 9,000 rpm on a 10,000 rpm scale, with the shift lights peaking at 8,800. The KV8 rev limit is still to be set, and the oil warning (below 25 psi above 2,500 rpm) is a placeholder. Keys: 1, 2 and 3 switch screens, 4 to 8 show the concepts, 9 brings the map in or out, T plays the tour, Enter acknowledges, Space pauses, F goes full screen.</p>
 </div>
 
 <script>
@@ -146,7 +146,7 @@ button.go{background:var(--acc);border-color:var(--acc);color:#04101f}
 const $ = id => document.getElementById(id);
 const NO = '- - -';
 const KPA_PSI = 6.894757, BARO = 101.3, DT = 0.05;
-const SHIFT = 7300, REDLINE = 7500, RPM_MAX = 9000, BOOST_T = 28, BOOST_MAX = 35, MPH_MAX = 160;
+const SHIFT = 8800, REDLINE = 9000, RPM_MAX = 10000, BOOST_T = 28, BOOST_MAX = 35, MPH_MAX = 160;
 
 // ── Simulated lap: same script and numbers as the app's DriveCycle ──
 const RAT = [3.636, 2.375, 1.761, 1.346, 0.971, 0.756], ACC = [7.5, 6, 4.5, 3.4, 2.6, 2.0];
@@ -184,7 +184,7 @@ function buildLap() {
 const LAP = buildLap(), LAP_S = LAP.length * DT;
 const at = t => LAP[Math.min(LAP.length - 1, Math.floor((((t % LAP_S) + LAP_S) % LAP_S) / DT))];
 const moment = name => {
-  const f = { shift: s => s.th >= 100 && s.rpm >= 7300, high: s => s.th >= 100 && s.g === 3 && s.rpm >= 6700 && s.rpm <= 6950 }[name];
+  const f = { shift: s => s.th >= 100 && s.rpm >= SHIFT, high: s => s.th >= 100 && s.g === 3 && s.rpm >= 6700 && s.rpm <= 6950 }[name];
   const s = LAP.find(f); return s ? s.t : 0;
 };
 
@@ -290,7 +290,7 @@ function trackHTML() {
     <div style="position:relative;height:24px;margin-top:10px;background:#1A1A1A;border-radius:4px;overflow:hidden">
       <div id="t-red" style="position:absolute;left:${REDLINE / RPM_MAX * 100}%;right:0;top:0;bottom:0;background:#4A1A1A"></div>
       <div id="t-rfill" style="position:absolute;left:0;top:0;bottom:0;width:0"></div></div>
-    <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:18px;color:#8A8A8A"><span>0</span><span>3</span><span>6</span><span>9 ×1000</span></div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:18px;color:#8A8A8A">${[0, 2, 4, 6, 8].map(v => `<span>${v}</span>`).join("")}<span>${RPM_MAX / 1000} ×1000</span></div>
   </div>
   <div class="ab" id="t-normal" style="left:770px;top:88px;width:380px;height:340px;border-left:1px solid #1A1A1A;border-right:1px solid #1A1A1A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
     <div class="lab" style="font-size:20px">GEAR</div>
@@ -365,7 +365,7 @@ function roadHTML() {
   const cw = (520 - 16) / 2, rh = (608 - 36 - 22 - 40 - 22 - 32) / 3, s = { l: 16, v: 56, u: 22, p: 24 }, y0 = 58;
   return `<div id="v-road" class="ab" style="inset:0;display:none">
   ${level('r-e', 34, 'H', '#E24B4A', 'C', '#8A8A8A', 'ECT')}
-  ${dialHTML('r-r', 110, 9000, 1000, 500, 1000, 1000, REDLINE, 34, 'RPM × 1000',
+  ${dialHTML('r-r', 110, RPM_MAX, 1000, 500, 1000, 1000, REDLINE, 34, 'RPM × 1000',
     `<div class="lab" style="font-size:16px">GEAR</div><div class="num" id="r-gear" style="font-size:128px">-</div><div style="font-size:22px;color:#8A8A8A"><span id="r-rpm">${NO}</span> rpm</div>`)}
   <div class="ab" style="left:700px;top:56px;width:520px;height:608px">
     <div style="display:flex;justify-content:center"><div class="pill" id="r-pill" style="color:#8A8A8A">ROAD</div></div>
@@ -445,7 +445,7 @@ function tmapHTML() {
   <div class="ab" style="left:32px;top:88px;width:698px;height:300px;display:flex;flex-direction:column;justify-content:center;gap:10px">
     <span class="lab" style="font-size:22px">RPM</span><span class="num" id="tm-rpm" style="font-size:180px;line-height:.9">${NO}</span>
     <div style="position:relative;height:24px;border-radius:4px;background:#1A1A1A;overflow:hidden"><div style="position:absolute;top:0;bottom:0;left:${REDLINE / RPM_MAX * 100}%;right:0;background:#4A1A1A"></div><div id="tm-rfill" style="position:absolute;top:0;bottom:0;left:0;width:0"></div></div>
-    <div style="display:flex;justify-content:space-between;font-size:18px;color:#8A8A8A"><span>0</span><span>3</span><span>6</span><span>9 ×1000</span></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:18px;color:#8A8A8A">${[0, 2, 4, 6, 8].map(v => `<span>${v}</span>`).join("")}<span>${RPM_MAX / 1000} ×1000</span></div></div>
   <div class="ab" style="left:770px;top:88px;width:380px;height:300px;border-left:1px solid #1A1A1A;border-right:1px solid #1A1A1A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
     <span class="lab" style="font-size:20px">GEAR</span><span class="num" id="tm-gear" style="font-size:160px;line-height:.9">-</span>
     <span style="font-size:30px;font-weight:600"><span id="tm-mph">0</span> <span style="font-size:20px;font-weight:500;color:#8A8A8A">mph</span></span></div>
@@ -520,14 +520,14 @@ const arcAt = (cx, cy, r, a0, a1) => {
   const [x0, y0] = p(a0), [x1, y1] = p(a1);
   return `M${x0.toFixed(1)} ${y0.toFixed(1)}A${r} ${r} 0 ${Math.abs(a1 - a0) > 180 ? 1 : 0} ${a1 > a0 ? 1 : 0} ${x1.toFixed(1)} ${y1.toFixed(1)}`;
 };
-const ZONES = [[0, 5000, '#47D16C'], [5000, 6500, '#F5A623'], [6500, REDLINE, '#E24B4A'], [REDLINE, RPM_MAX, '#3D8BFF']];
-const zoneCol = rpm => (ZONES.find(z => rpm < z[1]) || ZONES[3])[2];
+const ZONES = [[0, 6500, '#47D16C'], [6500, REDLINE, '#F5A623'], [REDLINE, RPM_MAX, '#E24B4A']];
+const zoneCol = rpm => (ZONES.find(z => rpm < z[1]) || ZONES[ZONES.length - 1])[2];
 const lapFmt = sec => { const m = Math.floor(sec / 60), x = sec - m * 60; return `${m}:${x.toFixed(2).padStart(5, '0')}`; };
 
 function raceHTML() {
   const dots = Array.from({ length: 15 }, (_, i) => `<div id="rc-led${i}" style="position:absolute;left:${640 + i * 45.7 - 14}px;top:24px;width:28px;height:28px;border-radius:50%;background:#1A1A1A;border:2px solid #2A2A2A"></div>`).join('');
   const zones = ZONES.map(z => `<div style="position:absolute;left:${z[0] / RPM_MAX * 100}%;width:${(z[1] - z[0]) / RPM_MAX * 100}%;top:0;height:8px;background:${z[2]};opacity:.9"></div>`).join('');
-  const nums = Array.from({ length: 10 }, (_, i) => `<span style="position:absolute;left:${60 + 28 + i / 9 * (1800 - 56)}px;transform:translateX(-50%);top:138px;font-size:24px;font-weight:600;color:#E8E8E8">${i}</span>`).join('');
+  const nums = Array.from({ length: RPM_MAX / 1000 + 1 }, (_, i) => `<span style="position:absolute;left:${60 + 28 + i / (RPM_MAX / 1000) * (1800 - 56)}px;transform:translateX(-50%);top:138px;font-size:24px;font-weight:600;color:#E8E8E8">${i}</span>`).join('');
   const side = (id, x, y, h, label, col, unit) => `<div class="rt" style="left:${x}px;top:${y}px;width:300px;height:${h}px"><div class="h" style="color:${col}">${label}</div><div><span class="num" id="${id}" style="font-size:52px">${NO}</span><span style="font-size:24px;color:#8A8A8A"> ${unit}</span></div></div>`;
   const bar = (id, x, label, col) => `<div class="ab" style="left:${x}px;top:190px;width:120px;height:450px;border:2px solid #D8D8D8;border-radius:12px;padding:44px 16px 14px;display:flex;flex-direction:column-reverse;gap:5px">
     <div style="position:absolute;left:0;right:0;top:8px;text-align:center;font-size:20px;font-weight:700;color:#E8E8E8">${label}</div>
@@ -559,10 +559,10 @@ function raceHTML() {
 function sportHTML() {
   // Round tach, 640 x 640, centre (320, 320): 0-9 x1000 rpm over the same 270° sweep as the Road dial.
   let ticks = '', labs = '';
-  for (let v = 0; v <= 9000; v += 250) {
-    const a = ang(v / 9000), mj = v % 1000 === 0, r0 = mj ? 272 : 284, rad = a * Math.PI / 180;
+  for (let v = 0; v <= RPM_MAX; v += 250) {
+    const a = ang(v / RPM_MAX), mj = v % 1000 === 0, r0 = mj ? 272 : 284, rad = a * Math.PI / 180;
     ticks += `<line x1="${(320 + r0 * Math.cos(rad)).toFixed(1)}" y1="${(320 + r0 * Math.sin(rad)).toFixed(1)}" x2="${(320 + 296 * Math.cos(rad)).toFixed(1)}" y2="${(320 + 296 * Math.sin(rad)).toFixed(1)}" stroke="${v >= REDLINE ? '#E24B4A' : mj ? '#E8E8E8' : '#5A5A5A'}" stroke-width="${mj ? 4 : 2}"/>`;
-    if (mj) labs += `<text x="${(320 + 238 * Math.cos(rad)).toFixed(1)}" y="${(320 + 238 * Math.sin(rad)).toFixed(1)}" fill="${v >= 8000 ? '#E24B4A' : '#E8E8E8'}" font-size="40" font-weight="600" text-anchor="middle" dominant-baseline="central" font-family="Barlow Semi Condensed, Barlow, sans-serif">${v / 1000}</text>`;
+    if (mj) labs += `<text x="${(320 + 238 * Math.cos(rad)).toFixed(1)}" y="${(320 + 238 * Math.sin(rad)).toFixed(1)}" fill="${v >= REDLINE ? '#E24B4A' : '#E8E8E8'}" font-size="40" font-weight="600" text-anchor="middle" dominant-baseline="central" font-family="Barlow Semi Condensed, Barlow, sans-serif">${v / 1000}</text>`;
   }
   const seg = (id, a0, a1, n) => Array.from({ length: n }, (_, i) => {
     const g = Math.sign(a1 - a0) * 0.9, s0 = a0 + (a1 - a0) * i / n + g, s1 = a0 + (a1 - a0) * (i + 1) / n - g;
@@ -596,7 +596,7 @@ function sportHTML() {
     <svg viewBox="0 0 640 640" width="640" height="640">
       <path d="${arcAt(320, 320, 300, 135, 405)}" stroke="#1A1A1A" stroke-width="6" fill="none"/>
       <path id="sp-rarc" d="" stroke="#E8E8E8" stroke-width="6" fill="none"/>
-      <path d="${arcAt(320, 320, 300, ang(REDLINE / 9000), 405)}" stroke="#E24B4A" stroke-width="6" fill="none"/>
+      <path d="${arcAt(320, 320, 300, ang(REDLINE / RPM_MAX), 405)}" stroke="#E24B4A" stroke-width="6" fill="none"/>
       ${ticks}${labs}
       <path id="sp-mark" d="" stroke="#E24B4A" stroke-width="30" fill="none"/>
       <path d="${arcAt(320, 320, 200, 112, 68)}" stroke="#2A2A2A" stroke-width="10" fill="none" stroke-linecap="round"/>
@@ -760,7 +760,7 @@ function render() {
     }
     txt('rc-clock', clock()); $('rc-iat').innerHTML = live ? pair('IAT', Math.round(d.iat) + ' °C') : 'IAT ' + NO;
   } else if (view === 'sport') {
-    const f = live ? Math.min(1, d.rpm / 9000) : 0;
+    const f = live ? Math.min(1, d.rpm / RPM_MAX) : 0;
     $('sp-rarc').setAttribute('d', f > 0.001 ? arcAt(320, 320, 300, 135, ang(f)) : '');
     $('sp-mark').setAttribute('d', live ? arcAt(320, 320, 283, ang(f) - 5, ang(f)) : '');
     txt('sp-mph', live ? String(Math.round(mph())) : NO); txt('sp-gear', live ? gearText(d.gear) : NO);
