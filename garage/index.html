@@ -72,6 +72,17 @@ ul.plain li:last-child{border-bottom:0}
 .hrs div:nth-child(even){font-weight:700;text-align:right;white-space:nowrap}
 .hrs .tot{border-top:1px solid var(--line);padding-top:6px}
 .key{font-size:.8em;color:var(--muted)}
+.st{display:inline-block;font-style:normal;font-size:.66em;font-weight:800;letter-spacing:.02em;padding:1px 6px;border-radius:5px;border:1px solid;vertical-align:.15em;margin-left:4px;white-space:nowrap}
+.st-buy{color:var(--warn);background:var(--warn-bg)}.st-have{color:var(--ok);background:var(--ok-bg)}
+.st-do{color:var(--link);border-color:var(--link)}.st-check{color:var(--prop);border-color:var(--prop)}
+details{border-top:1px solid var(--line)}
+details:first-of-type{border-top:0}
+summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;font-weight:700}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-size:1.3em;color:var(--muted);width:1em;text-align:center}
+details[open]>summary::after{content:"\2212"}
+summary .gc{font-size:.75em;font-weight:500;color:var(--muted);margin-left:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
 footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font-size:.8em}
 </style>
 </head>
@@ -79,7 +90,7 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
 <header>
   <h1>Scooby install brief</h1>
   <p class="sub">22 Nov 2026 · from the build notes since 8 Nov and scooby-docs main (fff14b6)</p>
-  <div class="answer"><b>6-speed and engine in now: yes, but gated.</b>It matches your 8 Nov install order. Five checks gate the engine drop, and most of Phase 1 is still left after it, not just hoses.</div>
+  <div class="answer"><b>6-speed and engine in now: yes, but gated.</b>It matches your 8 Nov install order. Four checks gate the engine drop, and most of Phase 1 is still left after it, not just hoses.</div>
   <a class="runlink" href="removal-runsheet.html">Open the 5-speed removal runsheet</a>
   <div class="row">
     <div class="progress"><div class="bar"><i id="bar"></i></div><small id="prog">0 of 0 checked</small></div>
@@ -89,7 +100,7 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
 </header>
 <nav aria-label="Jump to">
   <a href="#start">Before you start</a><a href="#gates">Engine-drop gates</a><a href="#drive">Before driving</a>
-  <a href="#after">Left after engine</a><a href="#hours">Hours</a>
+  <a href="#install">Still to install</a><a href="#hours">Hours</a>
 </nav>
 <main>
 
@@ -108,8 +119,6 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
   <ul>
     <li><label class="chk"><input type="checkbox" data-k="clutch"><span><strong>Clutch on the engine: pull-type, 24 splines (Gap 54)</strong>
       <em>Records conflict: an Oct photo read says Exedy Hyper Single, pull-type, SFI serial 021164 <b class="cf cf-M">M</b>; a later one says twin-plate "H22515" <b class="cf cf-L">L</b>. A search on H22515 today found nothing. Look at the cover and count the disc splines. If it's the Hyper Single (about 375 lb-ft), it's a break-in clutch only for 750 whp.</em></span></label></li>
-    <li><label class="chk"><input type="checkbox" data-k="xmember"><span><strong>Front crossmember: turbo or non-turbo (Gap 55)</strong>
-      <em>GC8 swappers use the turbo one for up-pipe clearance. Photo it or read its part number. <b class="cf cf-M">M</b></em></span></label></li>
     <li><label class="chk"><input type="checkbox" data-k="steer"><span><strong>Steering toe-board bushing, before the engine goes in</strong>
       <em>You ordered 34361FC000 in Oct, but the 1993 catalog lists 31020GA050. Confirm by VIN. <b class="cf cf-M">M</b></em></span></label></li>
     <li><label class="chk"><input type="checkbox" data-k="bearing"><span><strong>Release bearing onto the transmission</strong>
@@ -133,18 +142,56 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
   </ul>
 </section>
 
-<section id="after">
-  <h2>Left after the engine is in</h2>
-  <p class="lead">This is the bigger half of Phase 1.</p>
-  <ul class="plain">
-    <li><strong>Electrical</strong> · PDM-28 not wired in, battery cables not terminated, KV8 programming session not done</li>
-    <li><strong>Fuel</strong> · whole filler path replacement; Gap 64 fuel-pump failsafe conflict open</li>
-    <li><strong>Cooling</strong> · Koyo radiator and fans, coolant hoses to buy, heater hoses at the firewall</li>
-    <li><strong>Intercooler loop</strong> · ADR-015 Proposed, Gaps 69–77 open</li>
-    <li><strong>Crankcase breathing</strong> · AOS and balance tube re-plumb</li>
-    <li><strong>Drivetrain</strong> · R180 in, driveshaft, shifter, clutch bleed, fluids (Motul 75W-90 on hand)</li>
-    <li><strong>Turbo and exhaust</strong> · state not recorded</li>
-  </ul>
+<section id="install">
+  <h2>Still to install <span class="count" data-count="install"></span></h2>
+  <p class="lead">From your notes and the build records. Tap a group to open it.</p>
+  <div class="legend"><i class="st st-buy">Buy</i><i class="st st-have">On hand</i><i class="st st-do">Connect</i><i class="st st-check">Verify</i></div>
+  <details id="g-stand" open><summary>On the stand, before the drop<span class="gc" data-count="g-stand"></span></summary><ul>
+    <li><label class="chk"><input type="checkbox" data-k="i-damper"><span><strong>ATI damper and a new crank bolt <i class="st st-check">Verify</i></strong><em>Damper on hand. Gauge the old bolt first (M13 x 1.5 best supported); the bolt is torque-to-yield, so fit a new one. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-knock"><span><strong>Knock sensor on the block <i class="st st-have">On hand</i></strong><em>WHP wideband kit. The boss is easier to reach on the stand. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-turbowater"><span><strong>Turbo water lines <i class="st st-do">Connect</i></strong><em>The CHRA water ports were capped in photos; you said one hose runs to the head port. Both need flow before first fire. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-aosports"><span><strong>AOS and balance-tube port threads <i class="st st-check">Verify</i></strong><em>One adapter didn't fit. Gauge pitch, taper and diameter before buying another. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-tbcool"><span><strong>Throttle body coolant: cap or connect <i class="st st-check">Verify</i></strong><em>You removed the TB hose. Whether the Forester XT DBW body takes coolant isn't confirmed. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-stubs"><span><strong>Two bare stubs, right side of the engine <i class="st st-check">Verify</i></strong><em>Seen in Oct photos. Identify and tag them. <b class="cf cf-L">L</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-caps"><span><strong>Taped caps on every open port <i class="st st-do">Connect</i></strong><em>Paper plugs fall out during hoisting. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-mounts"><span><strong>Engine mounts and pitch stop <i class="st st-check">Verify</i></strong><em>Not seen in photos. GD mounts fit GC per Megan Racing. <b class="cf cf-M">M</b></em></span></label></li>
+  </ul></details>
+  <details id="g-coolant"><summary>Coolant<span class="gc" data-count="g-coolant"></span></summary><ul>
+    <li><label class="chk"><input type="checkbox" data-k="i-heater"><span><strong>Heater hoses, both, at the firewall <i class="st st-buy">Buy</i></strong><em>Crusty originals; you're leaning to generic hoses over a kit. <b class="cf cf-H">H</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-radhoses"><span><strong>Radiator hoses for the Koyo <i class="st st-buy">Buy</i></strong><em>You said coolant hoses are the remaining engine-bay buy. <b class="cf cf-H">H</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-coolhoses"><span><strong>Engine coolant hoses not replaced in the build <i class="st st-buy">Buy</i></strong><em>Same buy. <b class="cf cf-H">H</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-overflow"><span><strong>Overflow and bleed line to the reservoir <i class="st st-do">Connect</i></strong><em><b class="cf cf-M">M</b></em></span></label></li>
+  </ul></details>
+  <details id="g-vacuum"><summary>Vacuum and boost<span class="gc" data-count="g-vacuum"></span></summary><ul>
+    <li><label class="chk"><input type="checkbox" data-k="i-booster"><span><strong>Brake booster vacuum <i class="st st-do">Connect</i></strong><em>Manifold to the booster. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-fpr"><span><strong>Fuel pressure regulator reference <i class="st st-do">Connect</i></strong><em>Radium FPR on the engine. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-mac"><span><strong>MAC valve to the wastegate actuator <i class="st st-do">Connect</i></strong><em>The actuator's reference line is already on (photos). <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-bov"><span><strong>BOV and MAP references, if fitted <i class="st st-check">Verify</i></strong><em>Not recorded. <b class="cf cf-L">L</b></em></span></label></li>
+  </ul></details>
+  <details id="g-breathing"><summary>Crankcase breathing<span class="gc" data-count="g-breathing"></span></summary><ul>
+    <li><label class="chk"><input type="checkbox" data-k="i-aos"><span><strong>AOS on one side, balance tube on the other <i class="st st-have">On hand</i></strong><em>PLM unit, same as the IAG one. The old crankcase line is removed. <b class="cf cf-H">H</b></em></span></label></li>
+  </ul></details>
+  <details id="g-fuel"><summary>Fuel<span class="gc" data-count="g-fuel"></span></summary><ul>
+    <li><label class="chk"><input type="checkbox" data-k="i-ptfe"><span><strong>PTFE feed and return lines <i class="st st-do">Connect</i></strong><em>New -6 and -8 AN lines, tank to rails. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-filler"><span><strong>Fuel filler path <i class="st st-buy">Buy</i></strong><em>Door, cap, filler hose (42162AA060), vent hose (42162AA220), new clamps. <b class="cf cf-M">M</b></em></span></label></li>
+  </ul></details>
+  <details id="g-oil"><summary>Oil<span class="gc" data-count="g-oil"></span></summary><ul>
+    <li><label class="chk"><input type="checkbox" data-k="i-accusump"><span><strong>Accusump and its lines <i class="st st-buy">Buy</i></strong><em>Repo parts list: Canton 24-006 3-quart, clamps, -10AN fittings and hose, all needed. <b class="cf cf-H">H</b></em></span></label></li>
+  </ul></details>
+  <details id="g-other"><summary>Other lines and parts<span class="gc" data-count="g-other"></span></summary><ul>
+    <li><label class="chk"><input type="checkbox" data-k="i-clutchline"><span><strong>Clutch hydraulic line to the slave <i class="st st-do">Connect</i></strong><em>Check the Perrin line's fittings. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-ps"><span><strong>Power steering pressure and return <i class="st st-do">Connect</i></strong><em>Rack choice still open; the donor rack is left-hand drive. <b class="cf cf-H">H</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-ac"><span><strong>A/C compressor and lines <i class="st st-check">Verify</i></strong><em>Needed for the Interchiller. Compressor model open (Gap 73). <b class="cf cf-H">H</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-awic"><span><strong>Intercooler water loop <i class="st st-check">Verify</i></strong><em>Pump, exchanger and hoses. ADR-015 Proposed, Gaps 69–77. <b class="cf cf-H">H</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-exhaust"><span><strong>Downpipe and catback <i class="st st-do">Connect</i></strong><em>Nameless divorced downpipe on the FP Blue's V-band, stock STI catback. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-grounds"><span><strong>Engine ground straps <i class="st st-do">Connect</i></strong><em><b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-belts"><span><strong>Belts <i class="st st-have">On hand</i></strong><em>Bando 4PK895 and 5PK875. Confirm lengths with the ATI fitted. <b class="cf cf-M">M</b></em></span></label></li>
+  </ul></details>
+  <details id="g-elec"><summary>Electrical<span class="gc" data-count="g-elec"></span></summary><ul>
+    <li><label class="chk"><input type="checkbox" data-k="i-pdm"><span><strong>PDM-28 wired in <i class="st st-do">Connect</i></strong><em>Your next area; not integrated yet. <b class="cf cf-H">H</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-batt"><span><strong>Battery cables, RADLOK terminated <i class="st st-have">On hand</i></strong><em>Cable and connectors on hand, uncut. <b class="cf cf-H">H</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-kv8"><span><strong>KV8 first-start programming session <i class="st st-do">Connect</i></strong><em>Not done yet. <b class="cf cf-H">H</b></em></span></label></li>
+  </ul></details>
 </section>
 
 <section id="hours">
@@ -155,7 +202,8 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
     <div>R180 in</div><div>3–5 h</div>
     <div>6-speed in</div><div>4–6 h</div>
     <div>Engine drop and mate, hoist and helper</div><div>4–8 h</div>
-    <div class="tot">Heavy part, total</div><div class="tot">2–3 full days</div>
+    <div>On-the-stand prep (first group above)</div><div>3–5 h</div>
+    <div class="tot">Heavy part, total</div><div class="tot">2½–3½ full days</div>
   </div>
   <p class="key">The work after the engine is in can't be sized yet: it waits on the PDM first-start schedule.</p>
 </section>
