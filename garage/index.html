@@ -72,6 +72,7 @@ ul.plain li:last-child{border-bottom:0}
 .hrs div:nth-child(even){font-weight:700;text-align:right;white-space:nowrap}
 .hrs .tot{border-top:1px solid var(--line);padding-top:6px}
 .key{font-size:.8em;color:var(--muted)}
+.ok-note{background:var(--ok-bg);border:1px solid var(--ok);border-radius:10px;padding:10px 12px;margin:4px 0 8px;font-size:.92em}
 .st{display:inline-block;font-style:normal;font-size:.66em;font-weight:800;letter-spacing:.02em;padding:1px 6px;border-radius:5px;border:1px solid;vertical-align:.15em;margin-left:4px;white-space:nowrap}
 .st-buy{color:var(--warn);background:var(--warn-bg)}.st-have{color:var(--ok);background:var(--ok-bg)}
 .st-do{color:var(--link);border-color:var(--link)}.st-check{color:var(--prop);border-color:var(--prop)}
@@ -95,8 +96,8 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
 <body>
 <header>
   <h1>Scooby install brief</h1>
-  <p class="sub">22 Nov 2026 · from the build notes since 8 Nov and scooby-docs main (fff14b6)</p>
-  <div class="answer"><b>6-speed and engine in now: yes, but gated.</b>It matches your 8 Nov install order. Four checks gate the engine drop, and most of Phase 1 is still left after it, not just hoses.</div>
+  <p class="sub">22 Nov 2026 · from the build notes since 8 Nov, your 22 Nov photos and scooby-docs main (fff14b6)</p>
+  <div class="answer"><b>6-speed and engine in now: yes, but gated.</b>It matches your 8 Nov install order. Three items gate the engine drop, and most of Phase 1 is still left after it, not just hoses.</div>
   <a class="runlink" href="removal-runsheet.html">Open the 5-speed removal runsheet</a>
   <div class="row">
     <div class="progress"><div class="bar"><i id="bar"></i></div><small id="prog">0 of 0 checked</small></div>
@@ -121,14 +122,11 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
 
 <section id="gates" class="gate">
   <h2>Gates before the engine drop <span class="count" data-count="gates"></span></h2>
-  <p class="lead">Open gaps in the repo. Each one is a look or a photo at the car.</p>
+  <p class="lead">Do these before or as the engine goes in.</p>
+  <p class="ok-note"><b>Settled.</b> <b>Clutch:</b> Exedy Hyper Single, pull-type, 24-spline disc, SFI serial 021164, with its manual. Your photos, 23 Oct and 22 Nov. <b class="cf cf-H">H</b> H22515 is engraved on the cover itself, not a second clutch (your photo). <b class="cf cf-H">H</b> It's rated about 375 lb-ft at the wheels, so it's the break-in clutch for 750 whp. <b class="cf cf-M">M</b><br><b>Front crossmember:</b> the EJ207 ran on it in this car before the rebuild. <b class="cf cf-H">H</b></p>
   <ul>
-    <li><label class="chk"><input type="checkbox" data-k="clutch"><span><strong>Clutch on the engine: pull-type, 24 splines (Gap 54)</strong>
-      <em>Records conflict: an Oct photo read says Exedy Hyper Single, pull-type, SFI serial 021164 <b class="cf cf-M">M</b>; a later one says twin-plate "H22515" <b class="cf cf-L">L</b>. A search on H22515 today found nothing. Look at the cover and count the disc splines. If it's the Hyper Single (about 375 lb-ft), it's a break-in clutch only for 750 whp.</em></span></label></li>
-    <li><label class="chk"><input type="checkbox" data-k="steer"><span><strong>Steering toe-board bushing, before the engine goes in</strong>
-      <em>You ordered 34361FC000 in Oct, but the 1993 catalog lists 31020GA050. Confirm by VIN. <b class="cf cf-M">M</b></em></span></label></li>
-    <li><label class="chk"><input type="checkbox" data-k="bearing"><span><strong>Release bearing onto the transmission</strong>
-      <em>For a pull-type clutch, the manual's first engine-install step moves it from the clutch cover to the 6-speed. <b class="cf cf-H">H</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="steer"><span><strong>Fit the steering toe-board bushing while the bay is empty</strong><em>On hand: 34361FC000 (your photo). <b class="cf cf-H">H</b> You settled fitment in Oct: the column spec is unchanged through 2008. <b class="cf cf-H">H</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="bearing"><span><strong>Release bearing onto the transmission</strong><em>Pull-type, so the manual's first engine-install step moves it from the clutch cover to the 6-speed. <b class="cf cf-H">H</b> Your 22 Nov photo shows a bearing already in the 6-speed's fork. Tick this once you confirm it's the new 30502AA130, which Subaru lists for the 2002–11 STI. <b class="cf cf-M">M</b> The Hyper Single kit ships without a bearing, and I found nothing that calls for a special one. <b class="cf cf-M">M</b></em></span></label></li>
     <li><label class="chk"><input type="checkbox" data-k="radiator"><span><strong>Radiator goes in after the engine</strong>
       <em>The manual's order <b class="cf cf-H">H</b>. Koyo with Mishimoto fans is unverified; Mishimoto lists 2.2 non-turbo only <b class="cf cf-L">L</b></em></span></label></li>
   </ul>
@@ -141,8 +139,7 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
       <em>None on record; an Oct chat listed it as unpurchased. Length for the GC wagon not recorded. <b class="cf cf-L">L</b></em></span></label></li>
     <li><label class="chk"><input type="checkbox" data-k="plugs"><span><strong>Transmission sensor plugs: reverse, neutral, speed, DCCD</strong>
       <em>Sort them before the box goes in; they're hard to reach after. The speed sensor feeds the KV8 (ADR-013 OI-6). <b class="cf cf-M">M</b></em></span></label></li>
-    <li><label class="chk"><input type="checkbox" data-k="hyd"><span><strong>Hydraulic clutch</strong>
-      <em>STI pedal set being restored <b class="cf cf-H">H</b>. Still to check: master cylinder, line fittings (Perrin line catalogued for a 2015 WRX), Exedy orifice disable, slave rod length. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="hyd"><span><strong>Hydraulic clutch</strong><em>On hand: STI pedal set being restored, Perrin clutch line, Exedy's orifice sheet. <b class="cf cf-H">H</b> Your photos show the 6-speed's slave with the orifice housing on its side and a braided line banjo-bolted to it. <b class="cf cf-H">H</b> Exedy's fix is to remove the orifice's two springs and two plastic parts; you can't tell from outside whether that's done. <b class="cf cf-H">H</b> If that braided line is the Perrin, its slave end fits. Still to check: master cylinder end, slave rod length. <b class="cf cf-M">M</b></em></span></label></li>
     <li><label class="chk"><input type="checkbox" data-k="shifter"><span><strong>6-speed shifter and linkage</strong>
       <em>No record of their state. Photo what you have.</em></span></label></li>
   </ul>
@@ -162,7 +159,7 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
     <li><label class="chk"><input type="checkbox" data-k="i-tbcool"><span><strong>Throttle body coolant: cap or connect <i class="st st-check">Verify</i></strong><em>You removed the TB hose. Whether the Forester XT DBW body takes coolant isn't confirmed. <b class="cf cf-M">M</b></em></span></label></li>
     <li><label class="chk"><input type="checkbox" data-k="i-stubs"><span><strong>Two bare stubs, right side of the engine <i class="st st-check">Verify</i></strong><em>Seen in Oct photos. Identify and tag them. <b class="cf cf-L">L</b></em></span></label></li>
     <li><label class="chk"><input type="checkbox" data-k="i-caps"><span><strong>Taped caps on every open port <i class="st st-do">Connect</i></strong><em>Paper plugs fall out during hoisting. <b class="cf cf-M">M</b></em></span></label></li>
-    <li><label class="chk"><input type="checkbox" data-k="i-mounts"><span><strong>Engine mounts and pitch stop <i class="st st-check">Verify</i></strong><em>Not seen in photos. GD mounts fit GC per Megan Racing. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-mounts"><span><strong>Engine mounts and pitch stop <i class="st st-check">Verify</i></strong><em>Pitch-stop bracket 32034AA001 on hand (your photo). <b class="cf cf-H">H</b> One engine mount looks bolted on in your clutch photo; the other side isn't shown. <b class="cf cf-M">M</b> GD mounts fit GC per Megan Racing. <b class="cf cf-M">M</b></em></span></label></li>
   </ul></details>
   <details id="g-coolant"><summary>Coolant<span class="gc" data-count="g-coolant"></span></summary><ul>
     <li><label class="chk"><input type="checkbox" data-k="i-heater"><span><strong>Heater hoses, both, at the firewall <i class="st st-buy">Buy</i></strong><em>Crusty originals; you're leaning to generic hoses over a kit. <b class="cf cf-H">H</b></em></span></label></li>
