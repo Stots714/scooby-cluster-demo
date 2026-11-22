@@ -83,6 +83,12 @@ summary::after{content:"+";font-size:1.3em;color:var(--muted);width:1em;text-ali
 details[open]>summary::after{content:"\2212"}
 summary .gc{font-size:.75em;font-weight:500;color:var(--muted);margin-left:auto}
 .legend{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.shop{background:var(--warn-bg);border:1px solid var(--warn);border-radius:10px;padding:10px 12px;margin:4px 0 10px}
+.shop ul{list-style:disc;padding-left:20px;margin:6px 0 0}
+.shop li{margin:3px 0}
+.shop li.got{text-decoration:line-through;color:var(--muted)}
+button.wide{width:100%;margin:0 0 6px}
+.src li{font-size:.85em;padding:4px 0}
 footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font-size:.8em}
 </style>
 </head>
@@ -100,7 +106,7 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
 </header>
 <nav aria-label="Jump to">
   <a href="#start">Before you start</a><a href="#gates">Engine-drop gates</a><a href="#drive">Before driving</a>
-  <a href="#install">Still to install</a><a href="#hours">Hours</a>
+  <a href="#install">Still to install</a><a href="#hours">Hours</a><a href="#sources">Sources</a>
 </nav>
 <main>
 
@@ -145,6 +151,8 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
 <section id="install">
   <h2>Still to install <span class="count" data-count="install"></span></h2>
   <p class="lead">From your notes and the build records. Tap a group to open it.</p>
+  <div class="shop"><b>Shopping list</b><span class="key"> · every Buy item below; struck when ticked</span><ul id="shop"><li data-for="i-heater">Heater hoses, both, at the firewall</li><li data-for="i-radhoses">Radiator hoses for the Koyo</li><li data-for="i-coolhoses">Engine coolant hoses not replaced in the build</li><li data-for="i-booster">Brake booster hose with check valve</li><li data-for="i-vhose">4 mm silicone vacuum hose, one 3&nbsp;m roll</li><li data-for="i-mac">MAC valve lines: compressor, actuator, vent</li><li data-for="i-vcaps">Vacuum caps, clamps or heat-rated zip ties</li><li data-for="i-filler">Fuel filler path</li><li data-for="i-accusump">Accusump and its lines</li></ul></div>
+  <button id="toggleall" type="button" class="wide">Open all groups</button>
   <div class="legend"><i class="st st-buy">Buy</i><i class="st st-have">On hand</i><i class="st st-do">Connect</i><i class="st st-check">Verify</i></div>
   <details id="g-stand" open><summary>On the stand, before the drop<span class="gc" data-count="g-stand"></span></summary><ul>
     <li><label class="chk"><input type="checkbox" data-k="i-damper"><span><strong>ATI damper and a new crank bolt <i class="st st-check">Verify</i></strong><em>Damper on hand. Gauge the old bolt first (M13 x 1.5 best supported); the bolt is torque-to-yield, so fit a new one. <b class="cf cf-M">M</b></em></span></label></li>
@@ -162,11 +170,16 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
     <li><label class="chk"><input type="checkbox" data-k="i-coolhoses"><span><strong>Engine coolant hoses not replaced in the build <i class="st st-buy">Buy</i></strong><em>Same buy. <b class="cf cf-H">H</b></em></span></label></li>
     <li><label class="chk"><input type="checkbox" data-k="i-overflow"><span><strong>Overflow and bleed line to the reservoir <i class="st st-do">Connect</i></strong><em><b class="cf cf-M">M</b></em></span></label></li>
   </ul></details>
-  <details id="g-vacuum"><summary>Vacuum and boost<span class="gc" data-count="g-vacuum"></span></summary><ul>
-    <li><label class="chk"><input type="checkbox" data-k="i-booster"><span><strong>Brake booster vacuum <i class="st st-do">Connect</i></strong><em>Manifold to the booster. <b class="cf cf-M">M</b></em></span></label></li>
-    <li><label class="chk"><input type="checkbox" data-k="i-fpr"><span><strong>Fuel pressure regulator reference <i class="st st-do">Connect</i></strong><em>Radium FPR on the engine. <b class="cf cf-M">M</b></em></span></label></li>
-    <li><label class="chk"><input type="checkbox" data-k="i-mac"><span><strong>MAC valve to the wastegate actuator <i class="st st-do">Connect</i></strong><em>The actuator's reference line is already on (photos). <b class="cf cf-M">M</b></em></span></label></li>
-    <li><label class="chk"><input type="checkbox" data-k="i-bov"><span><strong>BOV and MAP references, if fitted <i class="st st-check">Verify</i></strong><em>Not recorded. <b class="cf cf-L">L</b></em></span></label></li>
+  <details id="g-vacuum"><summary>Vacuum and boost<span class="gc" data-count="g-vacuum"></span></summary>
+  <p class="lead">Caliper four nipples before ordering: booster, plenum ports, turbo compressor, wastegate actuator.</p><ul>
+    <li><label class="chk"><input type="checkbox" data-k="i-booster"><span><strong>Brake booster hose with check valve <i class="st st-buy">Buy</i></strong><em>The one large hose. Match the old hose's size and length; the valve flows toward the booster only. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-vhose"><span><strong>4 mm silicone vacuum hose, one 3&nbsp;m roll <i class="st st-buy">Buy</i></strong><em>One size covers every small line below. <span class="prop">Proposed</span></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-mac"><span><strong>MAC valve lines: compressor, actuator, vent <i class="st st-buy">Buy</i></strong><em>Valve ports are 1/8 NPT. Use 4 mm hose and 3× 1/8 NPT to 3/16" barbs, or 2 barbs plus a muffler on the vent. Caliper the FP Blue nipples first. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-fpr"><span><strong>FPR reference, plenum to the Radium MPR <i class="st st-do">Connect</i></strong><em>The barb is 3/16" and takes 4–6 mm hose. Tap the plenum, not a single runner. <b class="cf cf-H">H</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-map"><span><strong>MAP sensor: manifold boss or hose run <i class="st st-check">Verify</i></strong><em>The Omni 4-bar seals by O-ring on GD manifolds. The V7 manifold may need a remote mount and a 4 mm run. <b class="cf cf-L">L</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-bov"><span><strong>BOV reference, if fitted <i class="st st-check">Verify</i></strong><em>Not recorded. If you have one, it's another 4 mm run. <b class="cf cf-L">L</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-purge"><span><strong>EVAP purge port: keep or cap (Gap 22) <i class="st st-check">Verify</i></strong><em>If you delete EVAP, cap the port. <b class="cf cf-M">M</b></em></span></label></li>
+    <li><label class="chk"><input type="checkbox" data-k="i-vcaps"><span><strong>Vacuum caps, clamps or heat-rated zip ties <i class="st st-buy">Buy</i></strong><em>Caps for unused manifold ports. <span class="prop">Proposed</span></em></span></label></li>
   </ul></details>
   <details id="g-breathing"><summary>Crankcase breathing<span class="gc" data-count="g-breathing"></span></summary><ul>
     <li><label class="chk"><input type="checkbox" data-k="i-aos"><span><strong>AOS on one side, balance tube on the other <i class="st st-have">On hand</i></strong><em>PLM unit, same as the IAG one. The old crankcase line is removed. <b class="cf cf-H">H</b></em></span></label></li>
@@ -207,6 +220,19 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
   </div>
   <p class="key">The work after the engine is in can't be sized yet: it waits on the PDM first-start schedule.</p>
 </section>
+<section id="sources">
+  <h2>Sources for the vacuum sizes</h2>
+  <ul class="plain src">
+    <li><a href="https://titanmotorsports.com/products/radium-engineering-mpr-ra-rotatable-fuel-pressure-regulator" target="_blank" rel="noopener">Radium MPR-RA listing</a>: 3/16" barb, 4–6 mm hose</li>
+    <li><a href="https://www.radiumauto.com/cdn/shop/files/19-0334.pdf" target="_blank" rel="noopener">Radium MPR-RA instructions</a>: reference from the plenum</li>
+    <li><a href="https://r44performance.com/products/mac-3-port-boost-control-solenoid-valve" target="_blank" rel="noopener">MAC 3-port solenoid</a>: three 1/8" NPT ports</li>
+    <li><a href="https://boostfactory.ca/collections/boost-factory/products/universal-3-port-mac-valve-boost-control-kit" target="_blank" rel="noopener">Boost Factory MAC kit</a>: 3/16" barbs and a muffler</li>
+    <li><a href="https://cobbtuning.atlassian.net/wiki/spaces/PRS/pages/56819754" target="_blank" rel="noopener">COBB 3-port solenoid install</a>: 4 mm hose on Subaru turbo nipples</li>
+    <li><a href="https://www.fastwrx.com/products/subaru-brake-booster-hose-2002-2007-wrx" target="_blank" rel="noopener">Subaru booster hose (02–07 WRX)</a>: check valve built in</li>
+    <li><a href="https://cobbtuning.atlassian.net/wiki/x/RoBWk" target="_blank" rel="noopener">COBB 4-bar MAP install</a>: O-ring sensor on GD manifolds</li>
+  </ul>
+</section>
+
 <p class="key">Confidence: <b class="cf cf-H">H</b> high · <b class="cf cf-M">M</b> medium · <b class="cf cf-L">L</b> low</p>
 </main>
 <footer>Ticks are saved on this device only.</footer>
@@ -232,13 +258,23 @@ footer{max-width:820px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
     if (k in state) b.checked = !!state[k];
     b.addEventListener("change", () => { state[k] = b.checked; save(state); refresh(); });
   });
-  refresh();
+  const shopSync = () => document.querySelectorAll("#shop li").forEach(li => {
+    const b = document.querySelector('input[data-k="' + li.dataset.for + '"]'); li.classList.toggle("got", !!(b && b.checked)); });
+  boxes.forEach(b => b.addEventListener("change", shopSync));
+  refresh(); shopSync();
+  const tog = document.getElementById("toggleall");
+  if (tog) tog.addEventListener("click", () => {
+    const groups = [...document.querySelectorAll("#install details")];
+    const open = !groups.every(d => d.open);
+    groups.forEach(d => d.open = open);
+    tog.textContent = open ? "Close all groups" : "Open all groups";
+  });
   const reset = document.getElementById("reset");
   let armed = null;
   reset.addEventListener("click", () => {
     if (!armed) { reset.textContent = "Tap again to clear"; armed = setTimeout(() => { armed = null; reset.textContent = "Reset ticks"; }, 4000); return; }
     clearTimeout(armed); armed = null; reset.textContent = "Reset ticks";
-    state = {}; save(state); boxes.forEach(b => b.checked = false); refresh();
+    state = {}; save(state); boxes.forEach(b => b.checked = false); refresh(); shopSync();
   });
   const wake = document.getElementById("wake");
   let lock = null, want = false;
