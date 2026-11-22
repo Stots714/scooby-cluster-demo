@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Scooby 5-speed removal runsheet</title>
+<style>
+:root {
+  --bg:#0f1115; --surf:#171a20; --surf2:#1f232b; --line:#2b3038; --text:#e9ebee; --muted:#a0a6ae;
+  --link:#8ab4f8; --ok:#3fb950; --warn:#e3a008; --no:#f2555a; --na:#8b949e; --prop:#c39bff;
+  --ok-bg:rgba(63,185,80,.16); --warn-bg:rgba(227,160,8,.18); --no-bg:rgba(242,85,90,.16); --na-bg:rgba(139,148,158,.16);
+  --done:#2a3a2d;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme=dark]) {
+    --bg:#f5f6f8; --surf:#ffffff; --surf2:#f0f2f5; --line:#d8dce2; --text:#16191d; --muted:#59606a;
+    --link:#0b57d0; --ok:#1a7f37; --warn:#8a5a00; --no:#c4232b; --na:#5c6670; --prop:#7a3fd1;
+    --ok-bg:#e3f4e7; --warn-bg:#fdf0d2; --no-bg:#fde6e7; --na-bg:#eceff2; --done:#e3f4e7;
+  }
+}
+:root[data-theme=light] { color-scheme:light;
+    --bg:#f5f6f8; --surf:#ffffff; --surf2:#f0f2f5; --line:#d8dce2; --text:#16191d; --muted:#59606a;
+    --link:#0b57d0; --ok:#1a7f37; --warn:#8a5a00; --no:#c4232b; --na:#5c6670; --prop:#7a3fd1;
+    --ok-bg:#e3f4e7; --warn-bg:#fdf0d2; --no-bg:#fde6e7; --na-bg:#eceff2; --done:#e3f4e7;
+}
+:root[data-theme=dark] { color-scheme:dark; }
+* { box-sizing:border-box; }
+html { -webkit-text-size-adjust:100%; scroll-padding-top:64px; }
+body { margin:0; background:var(--bg); color:var(--text); font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+@media (min-width:760px) { body { font-size:18px; } }
+a { color:var(--link); }
+header.top { padding:18px 16px 8px; max-width:880px; margin:0 auto; }
+header.top h1 { font-size:1.45em; line-height:1.2; margin:0 0 4px; }
+.sub { color:var(--muted); font-size:.85em; margin:0 0 10px; }
+.tools-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+button { font:inherit; font-size:.85em; color:var(--text); background:var(--surf2); border:1px solid var(--line);
+  border-radius:10px; padding:10px 14px; min-height:44px; cursor:pointer; }
+button[aria-pressed="true"] { background:var(--ok-bg); border-color:var(--ok); }
+.progress { flex:1 1 180px; min-width:160px; }
+.bar { height:10px; background:var(--surf2); border-radius:6px; overflow:hidden; border:1px solid var(--line); }
+.bar > i { display:block; height:100%; width:0; background:var(--ok); transition:width .2s; }
+.progress small { color:var(--muted); }
+nav.jump { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line);
+  display:flex; gap:6px; overflow-x:auto; padding:8px 12px; scrollbar-width:none; }
+nav.jump::-webkit-scrollbar { display:none; }
+nav.jump a { flex:0 0 auto; text-decoration:none; color:var(--text); background:var(--surf2); border:1px solid var(--line);
+  padding:8px 12px; border-radius:999px; font-size:.82em; min-height:40px; display:flex; align-items:center; }
+nav.jump a.stepnum { min-width:40px; justify-content:center; font-weight:700; }
+nav.jump a.gate { border-color:var(--no); color:var(--no); font-weight:700; }
+nav.jump a.cont { border-style:dashed; border-color:var(--warn); color:var(--warn); font-weight:700; }
+nav.jump a.is-done { background:var(--done); }
+main { max-width:880px; margin:0 auto; padding:0 12px 48px; }
+.sec { background:var(--surf); border:1px solid var(--line); border-radius:14px; padding:14px 14px 10px; margin:14px 0; }
+.sec h2 { font-size:1.15em; margin:2px 0 8px; display:flex; align-items:baseline; gap:10px; }
+.sec h3 { font-size:.95em; margin:16px 0 4px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.count { font-size:.7em; font-weight:500; color:var(--muted); }
+.lead { margin:4px 0 10px; }
+p { margin:8px 0; }
+ul { margin:0; padding:0; }
+ul.bul { padding-left:20px; }
+ul.bul li { margin:4px 0; }
+ul.checks { list-style:none; }
+@media (min-width:760px) { #tray ul.checks { display:grid; grid-template-columns:1fr 1fr; column-gap:18px; }
+  #tray ul.checks li label.chk { height:100%; border-bottom:1px solid var(--line); } }
+.nw { white-space:nowrap; }
+label.chk { display:flex; gap:12px; align-items:flex-start; padding:9px 4px; border-bottom:1px solid var(--line); cursor:pointer; }
+ul.checks li:last-child label.chk { border-bottom:0; }
+input[type=checkbox] { flex:0 0 auto; width:26px; height:26px; margin:1px 0 0; accent-color:var(--ok); }
+label.chk:has(input:checked) > span { color:var(--muted); text-decoration:line-through; text-decoration-thickness:1px; }
+.card { border:1px solid var(--line); background:var(--surf2); border-radius:12px; margin:12px 0; overflow:hidden; }
+.card-h { display:flex; gap:12px; align-items:center; padding:12px; cursor:pointer; }
+.card-h input { width:30px; height:30px; }
+.num { flex:0 0 auto; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; font-weight:800;
+  background:var(--bg); border:2px solid var(--line); }
+.ttl { font-weight:700; font-size:1.05em; line-height:1.25; }
+.ttl small { display:block; font-weight:600; font-size:.7em; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+.card:has(.card-h input:checked) { background:var(--done); }
+.card:has(.card-h input:checked) .det { display:none; }
+.card:has(.card-h input:checked) .ttl { text-decoration:line-through; color:var(--muted); }
+.det { list-style:none; padding:0 12px 10px 12px; }
+.det li { padding:8px 10px; margin:6px 0; border-radius:8px; background:var(--surf); border:1px solid var(--line); }
+.det li.tools { border-left:5px solid var(--link); }
+.card.gate { border:2px solid var(--no); }
+.card.gate .num { border-color:var(--no); color:var(--no); }
+.card.contingency { border:2px dashed var(--warn); }
+.card.contingency .num { border-color:var(--warn); color:var(--warn); }
+.cf { display:inline-block; min-width:1.45em; text-align:center; font-size:.72em; font-weight:800; line-height:1.45em;
+  border-radius:5px; padding:0 3px; vertical-align:.08em; }
+.cf-H { background:var(--ok-bg); color:var(--ok); border:1px solid var(--ok); }
+.cf-M { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn); }
+.cf-L { background:var(--no-bg); color:var(--no); border:1px solid var(--no); }
+.prop { color:var(--prop); font-weight:700; }
+.ok { color:var(--ok); font-weight:700; }
+.warn { color:var(--warn); font-weight:700; }
+.no { color:var(--no); font-weight:700; }
+.danger { color:#fff; background:var(--no); padding:0 5px; border-radius:4px; font-weight:700; -webkit-box-decoration-break:clone; box-decoration-break:clone; }
+.legend { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:6px 0 10px; }
+.conf-key { font-size:.8em; color:var(--muted); display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.chip { display:inline-block; font-size:.74em; line-height:1.25; padding:4px 7px; border-radius:7px; margin:2px 2px 2px 0;
+  border:1px solid transparent; }
+.r-ok { background:var(--ok-bg); color:var(--ok); border-color:var(--ok); }
+.r-warn { background:var(--warn-bg); color:var(--warn); border-color:var(--warn); }
+.r-no { background:var(--no-bg); color:var(--no); border-color:var(--no); }
+.r-na { background:var(--na-bg); color:var(--na); border-color:var(--na); }
+.r-danger { background:var(--no); color:#fff; font-weight:700; }
+.chip .cf { font-size:.85em; margin-left:2px; }
+.tblwrap { overflow-x:auto; margin:0 -4px; }
+table.map { border-collapse:collapse; width:100%; min-width:520px; }
+table.map th, table.map td { border-bottom:1px solid var(--line); padding:6px 4px; vertical-align:top; text-align:left; }
+table.map thead th { font-size:.75em; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+table.map tbody th { white-space:nowrap; font-size:.85em; }
+table.map tbody th a { color:var(--text); text-decoration:none; display:flex; align-items:center; gap:6px; }
+.mnum { display:inline-grid; place-items:center; width:26px; height:26px; border-radius:50%; background:var(--surf2);
+  border:1px solid var(--line); font-weight:800; font-size:.85em; }
+table.map tbody tr.done th a, .maplist li.done .mhead { color:var(--muted); text-decoration:line-through; }
+.maplist { list-style:none; display:none; }
+.maplist li { padding:8px 0; border-bottom:1px solid var(--line); }
+.maplist .mhead { color:var(--text); text-decoration:none; font-weight:700; display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.maplist li.gate-row .mnum { border-color:var(--no); color:var(--no); }
+@media (max-width:599px) { .tblwrap { display:none; } .maplist { display:block; }
+  .tools-row .progress { flex-basis:100%; } .tools-row button { flex:1 1 0; } }
+tr.gate-row .mnum { border-color:var(--no); color:var(--no); }
+.note { font-size:.85em; color:var(--muted); }
+footer { max-width:880px; margin:0 auto; padding:0 16px 40px; color:var(--muted); font-size:.8em; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Scooby 5-speed removal runsheet</h1>
+  <p class="sub">1993 GF8 wagon &middot; as of 15 Nov 2026 (rev 25) &middot; <a href="./">Install brief</a></p>
+  <div class="tools-row">
+    <div class="progress"><div class="bar"><i id="bar"></i></div><small id="progtxt">Steps 0 of 9</small></div>
+    <button id="wake" type="button" aria-pressed="false">Keep screen on</button>
+    <button id="reset" type="button">Reset ticks</button>
+  </div>
+</header>
+<nav class="jump" aria-label="Jump to"><a href="#map">Map</a><a href="#scope">Scope</a><a href="#tray">Tray</a><a href="#preop">Pre-op</a><a href="#procedure">Steps</a><a class="stepnum" href="#step-1">1</a><a class="stepnum" href="#step-2">2</a><a class="stepnum" href="#step-3">3</a><a class="stepnum" href="#step-4">4</a><a class="stepnum" href="#step-5">5</a><a class="stepnum" href="#step-6">6</a><a class="gate" href="#gate-a">Gate A</a><a class="stepnum" href="#step-7">7</a><a class="stepnum" href="#step-8">8</a><a class="cont" href="#contingency-r">R</a><a href="#postop">Post-op</a><a href="#open">Open</a><a href="#sources">Sources</a></nav>
+<main>
+
+<section id="map" class="sec">
+  <h2>Socket and impact map</h2>
+  <p class="lead">Which socket each step needs, and whether the Ryobi can touch it. Read from each step's Tools line; tap a step to jump to it.</p>
+  <div class="legend">
+    <span class="chip r-ok">Impact OK</span>
+    <span class="chip r-warn">Crack by hand, then impact</span>
+    <span class="chip r-no">Hand tools only</span>
+    <span class="chip r-na">Impact not stated</span>
+    <span class="conf-key"><b class="cf cf-H">H</b> high <b class="cf cf-M">M</b> medium <b class="cf cf-L">L</b> low</span>
+  </div>
+  <div class="tblwrap"><table class="map">
+    <thead><tr><th scope="col">Step</th><th scope="col">12 mm</th><th scope="col">14 mm</th><th scope="col">17 mm</th><th scope="col">Other</th></tr></thead>
+    <tbody><tr data-step="step-1" class="done"><th scope="row"><a href="#step-1"><span class="mnum">1</span>Exhaust</a></th><td></td><td></td><td></td><td><span class="chip r-na">sockets, sizes not listed</span></td></tr><tr data-step="step-2"><th scope="row"><a href="#step-2"><span class="mnum">2</span>Harness</a></th><td><span class="chip r-no">ground <b class="cf cf-L">L</b></span></td><td></td><td></td><td><span class="chip r-no">pliers or fingers</span></td></tr><tr data-step="step-3"><th scope="row"><a href="#step-3"><span class="mnum">3</span>Clutch cable</a></th><td></td><td></td><td></td><td><span class="chip r-no">pliers + locknut wrench, size ? <b class="cf cf-L">L</b></span></td></tr><tr data-step="step-4"><th scope="row"><a href="#step-4"><span class="mnum">4</span>Driveshaft</a></th><td><span class="chip r-no">diff flange, if diff in <b class="cf cf-L">L</b></span></td><td><span class="chip r-warn">center bearing <b class="cf cf-M">M</b></span></td><td></td><td></td></tr><tr data-step="step-5"><th scope="row"><a href="#step-5"><span class="mnum">5</span>Shifter</a></th><td><span class="chip r-no">cushion rubber <b class="cf cf-M">M</b></span><span class="chip r-no">stay/rod <b class="cf cf-L">L</b></span></td><td><span class="chip r-no">stay/rod <b class="cf cf-L">L</b></span></td><td></td><td><span class="chip r-no">pin punch</span></td></tr><tr data-step="step-6"><th scope="row"><a href="#step-6"><span class="mnum">6</span>Front axles</a></th><td></td><td><span class="chip r-ok">sway link <b class="cf cf-L">L</b></span><span class="chip r-no">pinch bolt <b class="cf cf-L">L</b></span></td><td><span class="chip r-ok">sway link <b class="cf cf-L">L</b></span></td><td><span class="chip r-no">pry bar, pin tool, wire</span></td></tr><tr class="gate-row"><th scope="row"><a href="#gate-a"><span class="mnum">A</span>Gate A</a></th><td colspan="4"><span class="chip r-danger">Stop: walk-around, jack strapped, nobody under</span></td></tr><tr data-step="step-7"><th scope="row"><a href="#step-7"><span class="mnum">7</span>Crossmember</a></th><td></td><td><span class="chip r-ok">mount nuts <b class="cf cf-M">M</b></span><span class="chip r-warn">body x4 <b class="cf cf-M">M</b></span></td><td><span class="chip r-warn">body x2 <b class="cf cf-M">M</b></span></td><td></td></tr><tr data-step="step-8"><th scope="row"><a href="#step-8"><span class="mnum">8</span>Lower out</a></th><td></td><td></td><td></td><td><span class="chip r-ok">mount, size ? <b class="cf cf-L">L</b></span></td></tr><tr data-step="contingency-r"><th scope="row"><a href="#contingency-r"><span class="mnum">R</span>Rear diff</a></th><td></td><td><span class="chip r-na">front member <b class="cf cf-L">L</b></span></td><td><span class="chip r-warn">x-member bolts <b class="cf cf-M">M</b></span><span class="chip r-na">front member <b class="cf cf-L">L</b></span></td><td><span class="chip r-no">pry bar, drain pan, wire</span></td></tr></tbody>
+  </table></div>
+  <ul class="maplist"><li data-step="step-1"><a class="mhead" href="#step-1"><span class="mnum">1</span>Exhaust</a><div><span class="chip r-na">sockets, sizes not listed</span></div></li><li data-step="step-2"><a class="mhead" href="#step-2"><span class="mnum">2</span>Harness</a><div><span class="chip r-no">12 mm · ground <b class="cf cf-L">L</b></span><span class="chip r-no">pliers or fingers</span></div></li><li data-step="step-3"><a class="mhead" href="#step-3"><span class="mnum">3</span>Clutch cable</a><div><span class="chip r-no">pliers + locknut wrench, size ? <b class="cf cf-L">L</b></span></div></li><li data-step="step-4"><a class="mhead" href="#step-4"><span class="mnum">4</span>Driveshaft</a><div><span class="chip r-no">12 mm · diff flange, if diff in <b class="cf cf-L">L</b></span><span class="chip r-warn">14 mm · center bearing <b class="cf cf-M">M</b></span></div></li><li data-step="step-5"><a class="mhead" href="#step-5"><span class="mnum">5</span>Shifter</a><div><span class="chip r-no">12 mm · cushion rubber <b class="cf cf-M">M</b></span><span class="chip r-no">12 mm · stay/rod <b class="cf cf-L">L</b></span><span class="chip r-no">14 mm · stay/rod <b class="cf cf-L">L</b></span><span class="chip r-no">pin punch</span></div></li><li data-step="step-6"><a class="mhead" href="#step-6"><span class="mnum">6</span>Front axles</a><div><span class="chip r-ok">14 mm · sway link <b class="cf cf-L">L</b></span><span class="chip r-no">14 mm · pinch bolt <b class="cf cf-L">L</b></span><span class="chip r-ok">17 mm · sway link <b class="cf cf-L">L</b></span><span class="chip r-no">pry bar, pin tool, wire</span></div></li><li class="gate-row"><a class="mhead" href="#gate-a"><span class="mnum">A</span>Gate A</a><div><span class="chip r-danger">Stop: walk-around, jack strapped, nobody under</span></div></li><li data-step="step-7"><a class="mhead" href="#step-7"><span class="mnum">7</span>Crossmember</a><div><span class="chip r-ok">14 mm · mount nuts <b class="cf cf-M">M</b></span><span class="chip r-warn">14 mm · body x4 <b class="cf cf-M">M</b></span><span class="chip r-warn">17 mm · body x2 <b class="cf cf-M">M</b></span></div></li><li data-step="step-8"><a class="mhead" href="#step-8"><span class="mnum">8</span>Lower out</a><div><span class="chip r-ok">mount, size ? <b class="cf cf-L">L</b></span></div></li><li data-step="contingency-r"><a class="mhead" href="#contingency-r"><span class="mnum">R</span>Rear diff</a><div><span class="chip r-na">14 mm · front member <b class="cf cf-L">L</b></span><span class="chip r-warn">17 mm · x-member bolts <b class="cf cf-M">M</b></span><span class="chip r-na">17 mm · front member <b class="cf cf-L">L</b></span><span class="chip r-no">pry bar, drain pan, wire</span></div></li></ul>
+  <p class="note"><span class="no">Never reinstall the crossmember bolts with an impact.</span> Fit each socket before you lean on it: most sizes are M or L.</p>
+</section>
+<section id="scope" class="sec"><h2>Scope and starting state<span class="count" data-count="scope"></span></h2>
+<p class="lead">This runsheet takes the 5-speed out of the car and stops there. The 6-speed and R180 install gets its own runsheet.</p>
+<p>Starting state, read from your photos <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>, photo read):</p>
+<ul class="bul">
+<li>Engine out. The 5-speed still sits in the tunnel on its rear crossmember.</li>
+<li>Rear diff out <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>). Both rear axles hang free, and the diff mount eyes in the rear crossmember are empty.</li>
+<li>Driveshaft probably out <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>). With the diff gone, a driveshaft still in the car would droop at the back, and nothing droops in the photos. Step 4 covers it if it is still in.</li>
+</ul>
+<p>The steps follow the 2002 Impreza service manual (its transmission removal has the same under-car steps) and a GC8 owner's write-up. Confidence tags: H high, M medium, L low.</p>
+</section>
+<section id="tray" class="sec"><h2>The tray<span class="count" data-count="tray"></span></h2>
+<p class="lead">Lay all of this out and tick it off before the first bolt turns. The step numbers show where each item gets used.</p>
+<h3>Lift and support</h3>
+<ul class="checks">
+<li><label class="chk"><input type="checkbox" data-k="the-tray-lift-and-support-1"><span>4 jack stands and wheel chocks, with the car level and high enough to lower the transmission out underneath</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-lift-and-support-2"><span>Floor jack under the case, with a wood block on the saddle and a ratchet strap holding the case to the jack (steps 5 to 8, <span class="prop">Proposed</span>)</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-lift-and-support-3"><span>Front support for the bellhousing end, because nothing else holds it with the engine out: the engine hoist from above, or a 4x4 across the fenders with a ratchet strap down to the bellhousing (step 7, <span class="prop">Proposed</span>). <span class="danger">Never use a stand taken from under the car</span></span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-lift-and-support-4"><span>Engine hoist with chain or strap, only for the lift-out alternative (step 8, <span class="prop">Proposed</span>)</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-lift-and-support-5"><span>Creeper</span></label></li>
+</ul>
+<h3>Hand tools</h3>
+<ul class="checks">
+<li><label class="chk"><input type="checkbox" data-k="the-tray-hand-tools-1"><span>3/8 in and 1/2 in drive ratchets, and a breaker bar</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-hand-tools-2"><span>Short and long extensions, and a universal joint for reach (steps 4, 5, 7)</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-hand-tools-3"><span>Metric 6-point sockets, shallow and deep, 10 to 19 mm. Sizes a GC8 owner reports: 12 mm shifter cushion rubber, 14 mm center bearing, mount nuts and rear crossmember bolts, 17 mm front crossmember bolts <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>)</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-hand-tools-4"><span>Metric combination wrenches, 10 to 19 mm, to hold nuts</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-hand-tools-5"><span>Front axle roll pin tool (Company23 511, listed for 1993 to 2004 Impreza) or a long pin punch set, plus a hammer (step 6)</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-hand-tools-6"><span>Long pry bar to pull the control arm down (step 6). A small pry bar and a flat screwdriver for clips</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-hand-tools-7"><span>Slip-joint and needle-nose pliers for the clutch cable end and clips (step 3)</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-hand-tools-8"><span>Dead-blow or rubber mallet to coax joints off splines</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-hand-tools-9"><span>Ryobi 1/2 in impact (on hand). Use the lowest mode that moves the fastener, with impact sockets only. Each step says where it is and is not used</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-hand-tools-10"><span>1/2 in drive impact sockets, 14 and 17 mm (the sizes the impact is cleared for), plus an impact extension and an impact universal joint</span></label></li>
+</ul>
+<h3>Fluids and chemicals</h3>
+<ul class="checks">
+<li><label class="chk"><input type="checkbox" data-k="the-tray-fluids-and-chemicals-1"><span>Penetrating oil (pre-op and steps 1, 4, 7)</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-fluids-and-chemicals-2"><span>Drain pan and rags. Gear oil drips from the extension housing when the driveshaft comes out, and from the case when it tilts</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-fluids-and-chemicals-3"><span>Wire brush</span></label></li>
+</ul>
+<h3>Hardware handling</h3>
+<ul class="checks">
+<li><label class="chk"><input type="checkbox" data-k="the-tray-hardware-handling-1"><span>Zip bags, masking tape and a marker: bag and label each step's hardware</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-hardware-handling-2"><span>Mechanic's wire or zip ties to hang the front axles (step 6)</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-hardware-handling-3"><span>Thread chaser or tap matched to the crossmember bolts (post-op)</span></label></li>
+</ul>
+<h3>Safety and light</h3>
+<ul class="checks">
+<li><label class="chk"><input type="checkbox" data-k="the-tray-safety-and-light-1"><span>Safety glasses (rust and pin fragments fly) and gloves</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-safety-and-light-2"><span>Headlamp or work light</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="the-tray-safety-and-light-3"><span>Phone, for a photo before each disconnect</span></label></li>
+</ul>
+</section>
+<section id="preop" class="sec"><h2>Pre-op<span class="count" data-count="preop"></span></h2>
+<p class="lead">Soak the fasteners the day before, then stage the car the morning of.</p>
+<h3>Day before</h3>
+<ul class="checks">
+<li><label class="chk"><input type="checkbox" data-k="pre-op-day-before-1"><span>Penetrating oil on the rear crossmember bolts, the mount nuts, the center bearing bolts, the shifter cushion rubber bolts and any exhaust hardware on the transmission</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="pre-op-day-before-2"><span>Note why the crossmember bolts matter: they thread into nuts welded inside the body. An RS25 owner who broke one loose had to cut access from above, or cut out and re-weld the nut section <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>)</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="pre-op-day-before-3"><span>Check what is still connected: driveshaft, exhaust center pipe, speedometer cable or sensor, clutch cable</span></label></li>
+</ul>
+<h3>Morning of</h3>
+<ul class="checks">
+<li><label class="chk"><input type="checkbox" data-k="pre-op-morning-of-1"><span>Battery ground cable off. The manual's transmission removal starts here</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="pre-op-morning-of-2"><span>Car on four stands, level, wheels chocked, high enough to lower the transmission out</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="pre-op-morning-of-3"><span>Second coat of penetrating oil</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="pre-op-morning-of-4"><span>Photos from above and below: connector and cable routing, shifter linkage</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="pre-op-morning-of-5"><span><span class="prop">Proposed</span>: drain the 5-speed gear oil. It makes the case lighter and stops drips when it tilts (drain plug size not checked)</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="pre-op-morning-of-6"><span>Lay out the tray and tick it off</span></label></li>
+</ul>
+</section>
+<section id="procedure" class="sec"><h2>Procedure<span class="count" data-count="procedure"></span></h2>
+<p class="lead">Eight steps, one gate, and one rear diff contingency. Do not take the crossmember off until Gate A is ticked.</p>
+<article class="card step" id="step-1"><label class="card-h"><input type="checkbox" data-k="proc-step-1" checked data-main="1"><span class="num" aria-hidden="true">1</span><span class="ttl"><small>Step 1</small>Exhaust off the transmission</span></label><ul class="det"><li>If the center pipe still hangs from the transmission, unbolt it and lower it. The manual cautions against letting a pipe drop <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>)</li><li class="tools">Tools: sockets, extensions, penetrating oil</li></ul></article>
+<article class="card step" id="step-2"><label class="card-h"><input type="checkbox" data-k="proc-step-2" data-main="1"><span class="num" aria-hidden="true">2</span><span class="ttl"><small>Step 2</small>Harness and ground</span></label><ul class="det"><li>Photograph first, then unplug the transmission harness connectors and the ground terminal <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>, manual)</li><li>Speedometer: unscrew the speedometer cable from the transmission, passenger side. The 1993 Impreza uses a cable <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>, parts catalog)</li><li>Tape and label each plug</li><li class="tools">Tools: hands for the plugs; pliers or fingers on the speedometer cable's knurled collar. Ground terminal size not recorded, try 12 mm <span class="nw">(<b class="cf cf-L" title="confidence low">L</b></span>). <span class="no">No impact</span></li></ul></article>
+<article class="card step" id="step-3"><label class="card-h"><input type="checkbox" data-k="proc-step-3" data-main="1"><span class="num" aria-hidden="true">3</span><span class="ttl"><small>Step 3</small>Clutch cable</span></label><ul class="det"><li>Unhook the cable from the release lever, then free it from its bracket on the transmission <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>, clip style not checked)</li><li class="tools">Tools: pliers, plus a wrench for the locknut (size not recorded, <b class="cf cf-L" title="confidence low">L</b>). <span class="no">No impact</span></li></ul></article>
+<article class="card step" id="step-4"><label class="card-h"><input type="checkbox" data-k="proc-step-4" data-main="1"><span class="num" aria-hidden="true">4</span><span class="ttl"><small>Step 4</small>Driveshaft (skip if already out)</span></label><ul class="det"><li>With the rear diff out, the center bearing is what still holds it: 2 x 14 mm bolts on a GC8 <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>)</li><li>If the rear diff is still in: remove the diff mount front cover, mark both flanges, then remove the 4 shaft-to-diff bolts, leaving one in until the center bearing is off <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>, 1995 Impreza manual). Size: one Subaru owner reports 12 mm, model not given <span class="nw">(<b class="cf cf-L" title="confidence low">L</b></span>). <span class="no">Hand tools, wrench on the nut</span></li><li>Support the shaft, unbolt the bearing, then slide the front yoke rearward out of the transmission</li><li>Drain pan under the extension housing</li><li class="tools">Tools: 14 mm socket <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>). <span class="warn">Crack each bolt loose by hand</span>, <span class="ok">then the impact can run it out</span>. They thread into the body <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>)</li></ul></article>
+<article class="card step" id="step-5"><label class="card-h"><input type="checkbox" data-k="proc-step-5" data-main="1"><span class="num" aria-hidden="true">5</span><span class="ttl"><small>Step 5</small>Shifter linkage</span></label><ul class="det"><li>Remove the stay from the transmission bracket, and the rod from the joint <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>, 2002 manual)</li><li>Unbolt the cushion rubber from the body: 2 x 12 mm on a GC8 <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>)</li><li>Remove the joint and drive out its spring pin</li><li class="tools">Tools: 12 mm for the cushion rubber <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>). Stay and rod bolts not recorded, start with 12 then 14 mm <span class="nw">(<b class="cf cf-L" title="confidence low">L</b></span>). Pin punch and hammer. <span class="no">Hand tools only</span>: a 1/2 in impact can snap these small bolts</li></ul></article>
+<article class="card step" id="step-6"><label class="card-h"><input type="checkbox" data-k="proc-step-6" data-main="1"><span class="num" aria-hidden="true">6</span><span class="ttl"><small>Step 6</small>Front axles off the transmission, both sides</span></label><ul class="det"><li>Remove the sway bar link from the control arm, then disconnect the control arm from the knuckle at the ball joint <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>, manual)</li><li>Pull the control arm down with the long pry bar and swing the knuckle out</li><li>Drive the spring pin out through the chamfered side of its hole, then slide the axle off the stub <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>)</li><li>Hang each axle with wire so its joints do not hang at full angle (<span class="prop">Proposed</span>)</li><li>The pins are single use. The manual says always use a new spring pin on reassembly <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>)</li><li class="tools">Tools: sway bar link nut not recorded, try 14 then 17 mm <span class="nw">(<b class="cf cf-L" title="confidence low">L</b></span>). The <span class="ok">impact is fine here</span> and helps when the stud spins</li><li class="tools">Ball joint pinch bolt: 14 mm reported on a 2011 Impreza <span class="nw">(<b class="cf cf-L" title="confidence low">L</b></span>). <span class="no">No impact</span>: owners report snapped pinch bolts. Soak it and work it back and forth by hand</li><li class="tools">Also: long pry bar, Company23 511 or a long pin punch, wire</li></ul></article>
+<article class="card gate" id="gate-a"><label class="card-h"><input type="checkbox" data-k="proc-gate-a" data-main="1"><span class="num" aria-hidden="true">A</span><span class="ttl"><small>Gate A</small>Before the crossmember comes off</span></label><ul class="det"><li>Walk around the case: no cable, harness clip, hose or linkage still attached</li><li>Floor jack under the case and strapped to it, and the front held by the hoist or the strap from above, both just taking weight. <span class="danger">Nobody under the case from here on</span></li></ul></article>
+<article class="card step" id="step-7"><label class="card-h"><input type="checkbox" data-k="proc-step-7" data-main="1"><span class="num" aria-hidden="true">7</span><span class="ttl"><small>Step 7</small>Rear crossmember</span></label><ul class="det"><li>Remove the mount-to-crossmember nuts: 2 x 14 mm on a GC8 <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>)</li><li>Remove the crossmember-to-body bolts: 4 x 14 mm and 2 x 17 mm on a GC8 <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>)</li><li><span class="warn">Break each bolt loose by hand</span>. If one turns but does not back out, <span class="danger">stop: the welded nut may have broken loose</span></li><li>Lower the crossmember away</li><li class="tools">Tools: 14 mm for the mount nuts <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>, two sources). <span class="ok">Impact is fine</span></li><li class="tools">Body bolts, 4 x 14 mm and 2 x 17 mm <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>; an STI write-up also puts the outer bolts at 17 mm): <span class="warn">crack each loose with the breaker bar first, then use the impact only once the bolt backs out cleanly</span>. <span class="no">Never reinstall them with an impact</span> (factory manual, via the STI write-up)</li></ul></article>
+<article class="card step" id="step-8"><label class="card-h"><input type="checkbox" data-k="proc-step-8" data-main="1"><span class="num" aria-hidden="true">8</span><span class="ttl"><small>Step 8</small>Lower it out</span></label><ul class="det"><li>Lower both supports together, slowly, watching for snags</li><li>Then separate the transmission from the rear cushion rubber (the mount) <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>, manual)</li><li>Lift-out alternative (<span class="prop">Proposed</span>): chain the case to the engine hoist before step 7 and lift it out the top instead</li><li class="tools">Tools: mount-to-transmission fastener size not recorded <span class="nw">(<b class="cf cf-L" title="confidence low">L</b></span>). <span class="ok">Impact is fine once the case sits on the jack</span></li></ul></article>
+<article class="card contingency" id="contingency-r"><label class="card-h"><input type="checkbox" data-k="proc-contingency-r"><span class="num" aria-hidden="true">R</span><span class="ttl"><small>Contingency R</small>Rear diff, only if it is still in. Not needed to get the transmission out; do it any time after step 4</span></label><ul class="det"><li>Rear exhaust pipe and muffler off, if still on, and the driveshaft out per step 4 <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>, manual)</li><li>Remove the parking brake cable clamps and bracket near the diff <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>, manual)</li><li>Pop each rear axle DOJ out of the diff and wire the axle to the rear crossmember. The manual uses tool ST 28099PA100 <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>); a pry bar on the joint, never on the seal, is the home method (<span class="prop">Proposed</span>)</li><li>Drain the gear oil first so it cannot spill when the diff tips (<span class="prop">Proposed</span>). Plug type not recorded</li><li>Remove the lower differential bracket <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>, manual)</li><li>Transmission jack under the diff and strapped to it. <span class="danger">Nobody under the diff from here on</span></li><li>Remove the self-locking nuts on the two long rear-facing diff-to-crossmember bolts: 17 mm <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>, one owner source for Impreza and Forester)</li><li>Front member to body: loosen bolt A first, remove bolts B, then bolt A, with a helper holding the member so it cannot drop <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>, manual). Size not recorded <span class="nw">(<b class="cf cf-L" title="confidence low">L</b></span>)</li><li>Lower the jack slowly while moving the diff forward. The front member comes out with it <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>, manual)</li><li class="tools">Tools: 17 mm for the crossmember bolts, <span class="warn">crack loose by hand</span>, then <span class="ok">impact is fine</span>; front member bolts not recorded, try 14 then 17 mm <span class="nw">(<b class="cf cf-L" title="confidence low">L</b></span>); pry bar; drain pan; wire</li><li>On reinstall: new self-locking nuts (<span class="prop">Proposed</span>), new circlip and side oil seal on each axle <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>, manual), and keep the front member's upper and lower stoppers in their original order <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>, manual)</li></ul></article>
+</section>
+<section id="postop" class="sec"><h2>Post-op<span class="count" data-count="postop"></span></h2>
+<p class="lead">Keep the crossmember and its bolts for the 6-speed, retire the 5-speed mount, and fix any welded nut before install day.</p>
+<ul class="checks">
+<li><label class="chk"><input type="checkbox" data-k="post-op-1"><span>Crossmember and bolts: wire-brush, check for cracks, chase the threads (<span class="prop">Proposed</span>). Bag and label them "6MT reuse". GC owners report the 5-speed crossmember bolts up to the 6-speed <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>)</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="post-op-2"><span>Welded nuts in the body: run each bolt in by hand. Any that spins or binds gets fixed before install</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="post-op-3"><span>Rear cushion rubber (5-speed mount): retire it. Subaru's 5-speed mount (41022AC180) is listed as not for the 6MT STI <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>). Your Cusco 6-speed mount replaces it</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="post-op-4"><span>Axle spring pins: discard. Order new ones for install. A Subaru forum gives the part number as 051906452 <span class="nw">(<b class="cf cf-L" title="confidence low">L</b></span>, confirm with a dealer)</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="post-op-5"><span>Shifter cushion rubber and exhaust hardware: bag them until you know whether the 6-speed linkage reuses them <span class="nw">(<b class="cf cf-L" title="confidence low">L</b></span>)</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="post-op-6"><span>Old 5-speed: cap the openings, drain it if you did not already, store it upright</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="post-op-7"><span>Photos of the empty tunnel and the crossmember mounting points</span></label></li>
+</ul>
+</section>
+<section id="open" class="sec"><h2>Open items<span class="count" data-count="open"></span></h2>
+<p class="lead">Five open items. None of them blocks starting.</p>
+<ul class="checks">
+<li><label class="chk"><input type="checkbox" data-k="open-items-1"><span>Speed signal after the swap: the 6-speed has no cable drive <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>), so the 1993 cable speedometer will not read. Plan the speed signal before install day</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="open-items-2"><span>Driveshaft: probably out per the photos <span class="nw">(<b class="cf cf-M" title="confidence medium">M</b></span>). A look up the tunnel settles step 4</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="open-items-3"><span>Rear crossmember: it looks like an aftermarket tubular unit <span class="nw">(<b class="cf cf-L" title="confidence low">L</b></span>, photo read). Check the R180's mounting points against it before install day</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="open-items-4"><span>Bolt sizes: the 12, 14 and 17 mm figures come from one GC8 owner's write-up whose page would not load in full. Fit the socket before you lean on it</span></label></li>
+<li><label class="chk"><input type="checkbox" data-k="open-items-5"><span>Rear diff: the photos read it as out <span class="nw">(<b class="cf cf-H" title="confidence high">H</b></span>), but confirm under the car. Contingency R covers it if it is still in</span></label></li>
+</ul>
+<p>Torque values for putting the crossmember back are left out on purpose. The figures I found are for a 2002 car, so they belong in the install runsheet, checked against your 1993 manual.</p>
+</section>
+<section id="sources" class="sec"><h2>Sources<span class="count" data-count="sources"></span></h2>
+<p class="lead">Pages opened in full:</p>
+<ul class="bul">
+<li><a href="https://ken-gilbert.com/wrx/mans/4%20-%20TRANSMISSION.PDF" target="_blank" rel="noopener">2002 Impreza service manual, transmission section</a>: removal order, shifter steps, new spring pins</li>
+<li><a href="https://automotivetechinfo.com/wp-content/uploads/2003/08/Subaru-Drive-Axle-Service-Drive.pdf" target="_blank" rel="noopener">Subaru front drive axle service (2001 Legacy)</a>: sway bar link, control arm, spring pin</li>
+<li><a href="https://images.carid.com/company23/items/pdf/511-instructions.pdf" target="_blank" rel="noopener">Company23 511 roll pin tool instructions</a></li>
+<li><a href="https://www.fastwrx.com/products/subaru-transmission-mount-2002-2014-wrx" target="_blank" rel="noopener">FastWRX, Subaru 41022AC180 transmission mount</a>: not for the 6MT STI</li>
+<li><a href="https://blingstrom.squarespace.com/diy-project/2019/1/26/6-speed-group-n-transmission-mount-install" target="_blank" rel="noopener">Blingstrom, 6-speed Group N transmission mount install</a>: crossmember bolt sizes, no impact on reinstall</li>
+<li><a href="https://bobistheoilguy.com/forums/threads/2011-subaru-impreza-drive-axle-replacement.397687/" target="_blank" rel="noopener">BITOG, 2011 Impreza drive axle replacement</a>: pinch bolt size, snapped pinch bolts</li>
+<li>2004 Impreza service manual, MT gear shift lever section (raig0.planet.ee manual set; link not captured): shifter stay and rod</li>
+<li><a href="https://automotix.net/autorepair/diy/1995-subaru-impreza-procedure_dvar.html" target="_blank" rel="noopener">1995 Impreza driveline procedures (Automotix excerpt)</a>: driveshaft-to-diff bolt order</li>
+<li><a href="https://manuals.autorepairshq.com/Subaru/1999/Forester%20L%20F4-2.5L%20SOHC/Repair%20and%20Diagnosis/Transmission%20and%20Drivetrain/Differential%20Assembly/Service%20and%20Repair/Replacement/" target="_blank" rel="noopener">1999 Forester rear differential replacement (Operation CHARM)</a>: rear diff removal order, front member bolts, stoppers</li>
+<li><a href="https://raig0.planet.ee/subaru/Manuals/2004%20Impreza%20manuals/05.%20CHASSIS%5C04.%20DIFFERENTIALS%5C04.%20Rear%20Differential.pdf" target="_blank" rel="noopener">2004 Impreza service manual, rear differential</a>: same order on the next generation</li>
+<li><a href="https://northursalia.com/modifications/drivetrain/reardiff/reardiff.html" target="_blank" rel="noopener">North Ursalia, rear diff protector install</a>: 17 mm diff-to-crossmember bolts</li>
+<li><a href="https://classicmotorsports.com/forum/grm/subaru-driveshaft-removal/258125/page1" target="_blank" rel="noopener">Classic Motorsports forum, Subaru driveshaft removal</a>: 12 mm driveshaft-to-diff bolts</li>
+</ul>
+<p>Search excerpts only (the page did not load or was not opened):</p>
+<ul class="bul">
+<li><a href="http://www.perth-wrx.com/vb/mechanicals/66023-[solved]-gc8-6-speed-swap-has-no-reverse-lights.html" target="_blank" rel="noopener">Perth-WRX, GC8 6-speed swap write-up</a>: bolt counts and sizes</li>
+<li><a href="https://www.rs25.com/threads/attempting-6-speed-swap.226027/" target="_blank" rel="noopener">RS25, Attempting 6 speed swap</a>: welded nut failure and fix</li>
+<li><a href="https://www.rs25.com/threads/the-six-speed-swap-thread.181311/page-6?nested_view=1&amp;sortby=oldest" target="_blank" rel="noopener">RS25, The Six Speed Swap Thread</a>: crossmember reuse</li>
+<li><a href="https://www.rallysportdirect.com/products/cop-511-company23-front-axle-roll-pin-tool" target="_blank" rel="noopener">RallySport Direct, Company23 roll pin tool</a>: 1993 to 2004 Impreza fitment</li>
+<li><a href="https://bbs.legacycentral.org/viewtopic.php?p=99334" target="_blank" rel="noopener">Legacy Central, spring pin thread</a>: chamfered side, part number 051906452</li>
+<li><a href="https://www.subarupartsdeal.com/parts-list/1993-subaru-impreza/speedometer-cable.html" target="_blank" rel="noopener">SubaruPartsDeal, 1993 Impreza speedometer cable</a>: MT cable and transmission cable listed</li>
+<li><a href="https://www.rs25.com/threads/93-impreza-l-speedo-not-working.252191/" target="_blank" rel="noopener">RS25, 93 Impreza L speedo not working</a>: cable plugs into the transmission, passenger side</li>
+</ul>
+</section>
+</main>
+<footer>Ticks are saved on this device only. Copy of the runsheet as of 15 Nov 2026 (rev 25).</footer>
+<script>
+(function () {
+  var KEY = "scooby-5mt-runsheet-v1";
+  var mem = {};
+  function load() { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return mem; } }
+  function save(s) { mem = s; try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+  var state = load();
+  var boxes = Array.prototype.slice.call(document.querySelectorAll("input[data-k]"));
+  boxes.forEach(function (b) {
+    var k = b.getAttribute("data-k");
+    if (Object.prototype.hasOwnProperty.call(state, k)) b.checked = !!state[k];
+    b.addEventListener("change", function () { state[k] = b.checked; save(state); refresh(); });
+  });
+  function refresh() {
+    var main = boxes.filter(function (b) { return b.hasAttribute("data-main"); });
+    var done = main.filter(function (b) { return b.checked; }).length;
+    document.getElementById("bar").style.width = (100 * done / main.length) + "%";
+    document.getElementById("progtxt").textContent = "Steps and gate: " + done + " of " + main.length + " ticked";
+    document.querySelectorAll("[data-count]").forEach(function (el) {
+      var sec = document.getElementById(el.getAttribute("data-count"));
+      var bx = sec ? sec.querySelectorAll("input[data-k]") : [];
+      if (!bx.length) return;
+      var n = 0; bx.forEach(function (b) { if (b.checked) n++; });
+      el.textContent = n + " / " + bx.length;
+    });
+    document.querySelectorAll("nav.jump a.stepnum, nav.jump a.gate, nav.jump a.cont").forEach(function (a) {
+      var t = document.querySelector(a.getAttribute("href") + " .card-h input");
+      if (t) a.classList.toggle("is-done", t.checked);
+    });
+    document.querySelectorAll("[data-step]").forEach(function (r) {
+      var t = document.querySelector("#" + r.getAttribute("data-step") + " .card-h input");
+      if (t) r.classList.toggle("done", t.checked);
+    });
+  }
+  refresh();
+  var resetBtn = document.getElementById("reset"), armed = null;
+  resetBtn.addEventListener("click", function () {
+    if (!armed) {
+      resetBtn.textContent = "Tap again to clear";
+      armed = setTimeout(function () { armed = null; resetBtn.textContent = "Reset ticks"; }, 4000);
+      return;
+    }
+    clearTimeout(armed); armed = null; resetBtn.textContent = "Reset ticks";
+    state = {}; save(state);
+    boxes.forEach(function (b) { b.checked = b.defaultChecked; });
+    refresh();
+  });
+  var wakeBtn = document.getElementById("wake"), lock = null, want = false;
+  if (!("wakeLock" in navigator)) { wakeBtn.disabled = true; wakeBtn.textContent = "Screen-on not supported here"; }
+  async function getLock() {
+    try {
+      lock = await navigator.wakeLock.request("screen");
+      wakeBtn.setAttribute("aria-pressed", "true"); wakeBtn.textContent = "Screen stays on";
+      lock.addEventListener("release", function () { lock = null; if (!want) { wakeBtn.setAttribute("aria-pressed", "false"); wakeBtn.textContent = "Keep screen on"; } });
+    } catch (e) { want = false; wakeBtn.textContent = "Screen-on blocked"; }
+  }
+  wakeBtn.addEventListener("click", function () {
+    if (want) { want = false; if (lock) lock.release(); wakeBtn.setAttribute("aria-pressed", "false"); wakeBtn.textContent = "Keep screen on"; }
+    else { want = true; getLock(); }
+  });
+  document.addEventListener("visibilitychange", function () { if (want && !lock && document.visibilityState === "visible") getLock(); });
+})();
+</script>
+</body>
+</html>
